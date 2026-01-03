@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\TacticalNuke.GitLabRunner\TacticalNuke.GitLabRunner.csproj" />
+      <ProjectReference Include="..\TacticalNuke.Serilog\TacticalNuke.Serilog.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Sarif.Sdk" Version="4.6.0" />
+    </ItemGroup>
+
+</Project>

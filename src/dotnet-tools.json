@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "jetbrains.resharper.globaltools": {
+      "version": "2025.3.1",
+      "commands": [
+        "jb"
+      ],
+      "rollForward": false
+    }
+  }
+}

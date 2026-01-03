@@ -1,0 +1,11 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
+        <!-- This is a bugged nullability warning in .NET 10 -->
+        <NoWarn>CS8620</NoWarn>
+    </PropertyGroup>
+</Project>
