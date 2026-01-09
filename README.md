@@ -1,4 +1,4 @@
-# Tactical NUKE
+# xBuild
 
 **Tactical NUKE** task-based build automation system built with .NET, 
 based on the incredible work on [NUKE Build](https://github.com/nuke-build/nuke) 
@@ -13,58 +13,68 @@ Create a new console application:
 ```shell
 dotnet new console -n _build
 ```
-
 Add the package:
-
 ```shell
 dotnet add package TacticalBuild
 ```
-
 ```xml
 <PackageReference Include="TacticalBuild" Version="X.Y.Z"/>
 ```
 
 Add Targets:
-
 ```csharp
-public class BuildTargets
+using System.CommandLine;
+using TacticalNuke.Targets;
+
+namespace _build.Targets;
+
+// Class dependency injection supported, including referencing other target classes
+public class BuildTargets(
+    InspectionTargets inspectionTargets
+) : IBuildTargets 
 {
     public const string SolutionPath = "TacticalNuke.sln";
 
     // System.CommandLine options supported
     public BuildOption<string> Verbosity { get; } = new(
-        "normal",
+        "minimal",
         new Option<string>("--dotnet-verbosity")
         {
             Description = "Verbosity for dotnet tasks"
         }
     );
 
-    // Targets specified as lazily evaluated properties
+    // Targets specified as lazily evaluated properties. Name inferred and description provided:
     private ITarget Build => field ??= new Target(description: "Builds the solution")
         // Targets able to directly execute bash-like commands with shell execution
         .Executes($"""
-                   dotnet build {SolutionPath} 
-                   --verbosity {Verbosity.Value}
+                   dotnet build {SolutionPath}
+                   --verbosity {Verbosity}
                    """);
 
     private ITarget Test => field ??= new Target(description: "Tests the solution")
         // Specify the relative ordering of targets
         .After(Build)
+        // Command arguments can be redacted with :redact - "dotnet test TacticalNuke.sln --verbosity [REDACTED]"
         .Executes($"""
                    dotnet test {SolutionPath} 
-                   --verbosity {Verbosity.Value}
+                   --verbosity {Verbosity:redact}
                    """);
 
     private ITarget MergeCheck => field ??= new Target(description: "Runs required merge checks")
-        // Targets can trigger execution of other targets
-        .Triggers(Build, Test);
+        // Targets can express dependency relationships, triggering execution of other targets
+        .DependsOn(
+            Build, 
+            // Can reference targets defined elsewhere
+            inspectionTargets.Inspect,
+            Test
+        );
 }
 
 // Multiple target classes supported
 public class InspectionTargets(
     ILoggerFactory loggerFactory,
-    ) // Class dependency injection supported
+) : IBuildTargets // Class dependency injection supported
 {
     private ITarget RestoreDotnetTools => field ??= new Target(description: "Restores dotnet tools")
         // Don't show the target in the CLI
@@ -148,6 +158,122 @@ Options:
   --version                              Show version information
 ```
 
+## Features
+
+### Target Graph Execution
+
+### CLI Parameters with System.CommandLine
+
+### Simplified Shell Execution
+
+### 
+
+### Extension
+
+#### Dependency Injection
+
+The execution engine uses dependency injection, which can be used to extend the function of the system. Injected
+services can be resolved in class constructors, and by target delegates. Targets and build option classes must be
+registered as singletons. A scope is created per target execution. 
+
+```csharp
+// Program.cs
+var build = new TacticalNukeBuild("src")
+    .AddTargets<MyTargets>;
+build.Services.AddSingleton<IMySingleton, MySingleton>();
+build.Services.AddSingleton<IMyScoped, MyScoped>();
+await build.ExecuteAsync(args);
+
+// MyTargets.cs
+public class MyTargets(IMySingleton singleton) : IBuildTargets
+{
+    public ITarget Target => field ??= new Target()
+        .Executes((IMyScoped scoped) => {})
+}
+```
+
+#### Logging
+A basic `ILoggerFactory` implementation is provided built in, but this can be overriden using dependency injection.
+
+```csharp
+// SerilogExtensions.cs
+public static class SerilogExtensions
+{
+    extension(TacticalNukeBuild build)
+    {
+        public TacticalNukeBuild AddSerilog()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .Enrich.FromLogContext()
+                .MinimumLevel.Verbose()
+                .CreateLogger();
+
+            build.Services.AddLogging(b => b
+                .ClearProviders()
+                .AddSerilog(Log.Logger));
+
+            return build;
+        }
+    }
+}
+
+// Program.cs
+await new TacticalNukeBuild("src")
+    .AddSerilog()
+    .AddTargets<MyTargets>()
+    .ExecuteAsync(args);
+```
+
+#### Target Implementation
+
+Targets may be extended. Any class implementing `ITarget` may be used. 
+All built in extension methods target `T where T : ITarget`
+
+```csharp
+// MyTarget.cs
+/// Automatically implements a delegate setting "Executed" to true
+public class MyTarget : Target 
+{
+    public bool Executed { get; }
+    
+    public MyTarget([CallerMemberName] string name = "") : base(name)
+    {
+        Executes(() => Executed = true);
+    }
+}
+
+// MyBuildTargets.cs
+public class MyTargets : IBuildTargets
+{
+    public MyTarget Target => field ??= new MyTarget();
+}
+```
+
+## Porting from NUKE Build
+
+Tactical NUKE doesn't offer complete coverage of NUKE APIs by design and makes no commitment to support them. 
+However, most pipelines can be bridged to without requiring complete rewrites and some extension methods are provided 
+to assist in bridging the gap: 
+
+Add the NukeCommon extension package to the build:
+```shell
+dotnet add package TacticalBuild.NukeCommon
+```
+```xml
+<PackageReference Include="TacticalBuild.NukeCommon" Version="X.Y.Z"/>
+```
+
+Targets can be copied near verbatim with minor adjustments, and nuke common tools can be used as normal:
+
+```csharp
+ITarget ToolRestore => field ??= new Target()
+    ...
+    .Executes((BuildContext context) => DotNetTasks.DotNetToolRestore(s => s
+        .Configure(context)
+    ));
+```
+    
 ## Goals
 
 ### C# Build Engine

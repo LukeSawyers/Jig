@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            xBuild extension adding apt package utilities for targets
+        </Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\xBuild.UserInput\xBuild.UserInput.csproj"/>
+        <ProjectReference Include="..\xBuild.Shell\xBuild.Shell.csproj"/>
+        <ProjectReference Include="..\xBuild\xBuild.csproj"/>
+    </ItemGroup>
+
+</Project>

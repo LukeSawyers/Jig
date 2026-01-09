@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            xBuild extension adding shell execution capability for targets.
+        </Description>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="CliWrap" Version="3.10.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="System.Text.Json" Version="10.0.2" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\xBuild\xBuild.csproj" />
+    </ItemGroup>
+</Project>

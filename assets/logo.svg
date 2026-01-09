@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="xBuild terminal icon v2">
+  <defs>
+    <style>
+      .bg { fill: #0B1220; }      /* deep terminal */
+      .fg { fill: #E5E7EB; }      /* gray-200 */
+      .accent { fill: #22C55E; }  /* green */
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-weight: 800; }
+    </style>
+  </defs>
+
+  <!-- Background (kept) -->
+  <rect class="bg" x="48" y="48" width="416" height="416" rx="92"/>
+
+  <!-- Prompt dot (moved up/left, slightly larger) -->
+  <circle class="accent" cx="130" cy="125" r="25"/>
+
+  <!-- x (smaller) -->
+  <text class="mono fg" x="196" y="324" font-size="180" text-anchor="middle">x</text>
+
+  <!-- B (bigger) -->
+  <text class="mono fg" x="318" y="324" font-size="232" text-anchor="middle">B</text>
+
+  <!-- Cursor underscore (wider, closer to glyphs) -->
+  <rect class="accent" x="260" y="380" width="150" height="25" rx="15"/>
+</svg>

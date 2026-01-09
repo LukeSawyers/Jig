@@ -4,8 +4,38 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
-        <WarningsAsErrors>nullable</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- Package Metadata -->
+        <Version>0.1.1</Version>
+        <PackageIcon>logo-128.png</PackageIcon>
+        <Authors>xBuild Maintainers</Authors>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+
+        <!-- TODO       <RepositoryUrl></RepositoryUrl>-->
+
+        <!-- Warnings -->
+        <WarningsAsErrors>
+            nullable,
+            NU1902 <!-- Nuget package vulnerabilities -->
+        </WarningsAsErrors>
+        
         <!-- This is a bugged nullability warning in .NET 10 -->
         <NoWarn>CS8620</NoWarn>
     </PropertyGroup>
+
+    <ItemGroup Condition="$(IsPackable)">
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\"/>
+        <None Include="../../assets/logo-128.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Tetractic.CodeAnalysis.ExceptionAnalyzers" Version="1.4.8">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 </Project>

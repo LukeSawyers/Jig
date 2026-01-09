@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <PropertyGroup>
+        <Description>
+            xBuild extension adding user input capability.
+        </Description>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="CliWrap" Version="3.10.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\xBuild\xBuild.csproj" />
+    </ItemGroup>
+
+</Project>
