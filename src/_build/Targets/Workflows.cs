@@ -2,21 +2,23 @@ using xBuild.Targets;
 
 namespace _build.Targets;
 
-public class Workflows(Targets targets) : ITargetProvider
+public class Workflows(
+    DotnetTargets dotnet,
+    StaticAnalysisTargets staticAnalysis
+) : ITargetProvider
 {
-    ITarget MergeCheck => field ??= new Target(description: "Runs required merge checks")
+    public ITarget MergeCheck => field ??= new Target(description: "Runs required merge checks")
         .DependsOn(
-            () => targets.DotNetBuild,
-            () => targets.DotNetTest,
-            () => targets.DotNetPack,
-            () => targets.Inspect,
-            () => targets.LicenseCheck,
-            () => targets.PackageDescriptionCheck,
-            () => targets.CountLines
+            () => dotnet.Build,
+            () => dotnet.Test,
+            () => dotnet.Pack,
+            () => staticAnalysis.Inspect,
+            () => staticAnalysis.LicenseCheck,
+            () => staticAnalysis.PackageDescriptionCheck,
+            () => staticAnalysis.CountLines
         );
 
-    private ITarget Deploy => field ?? new Target(description: "Runs actions required to publish artifacts")
-        .DependsOn(
-            () => targets.NugetPush
+    public ITarget Deploy => field ?? new Target(description: "Runs actions required to publish artifacts")
+        .DependsOn(() => dotnet.NugetPush
         );
 }

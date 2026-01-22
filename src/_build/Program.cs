@@ -8,13 +8,13 @@ using xBuild.UserInput;
 
 var arguments = new[]
 {
-    // "LicenseCheck",
-    // "CountLines",
-    // "Inspect",
-    // "MergeCheck",
-    // "DotNetTest",
-    "PackageDescriptionCheck",
-    // "Pack",
+    nameof(DotnetTargets.Pack),
+    nameof(DotnetTargets.Test),
+    nameof(StaticAnalysisTargets.Inspect),
+    nameof(StaticAnalysisTargets.LicenseCheck),
+    nameof(StaticAnalysisTargets.PackageDescriptionCheck),
+    nameof(StaticAnalysisTargets.CountLines),
+    nameof(Workflows.MergeCheck),
     // "--help"
 };
 
@@ -24,7 +24,8 @@ await new Build("src", defaultBuildConcurrency: BuildConcurrency.Parallel)
     .AddSerilog()
     // .AddSpectre()
     .AddNotifications()
-    .AddTargets<Workflows>()
-    .AddTargets<Targets>()
+    .AddTargetsFromEntryAssembly()
+    // .AddTargets<Workflows>()
+    // .AddTargets<DotnetTargets>()
     .ExecuteAsync(args);
     // .ExecuteAsync(arguments);
