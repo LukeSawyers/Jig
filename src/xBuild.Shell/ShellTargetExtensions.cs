@@ -29,29 +29,6 @@ public static class ShellTargetExtensions
                 await shell.Command(command, loggingOptions).ExecuteAsync();
             }
         });
-
-        /// <summary>
-        ///     Adds an execution running the specified dotnet tool <paramref name="commands" /> in exec mode
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesDotNetTool(
-            IEnumerable<FormattableString> commands,
-            ShellLoggingOptions? loggingOptions = null
-        ) => target.Executes(
-            commands.Select(ShellExtensions.ToDotnetToolCommand),
-            loggingOptions
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified dotnet tool <paramref name="commands" /> in exec mode
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesDotNetTool(
-            FormattableString commands,
-            ShellLoggingOptions? loggingOptions = null
-        ) => target.ExecutesDotNetTool(
-            [commands],
-            loggingOptions
-        );
     }
 }
+

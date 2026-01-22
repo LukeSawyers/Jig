@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using CliWrap;
 
-namespace xBuild.Shell;
+namespace xBuild.Shell.DotnetTools;
 
 public static class ShellExtensions
 {

@@ -17,7 +17,6 @@ public static class AptTargetExtensions
         /// </summary>
         /// <param name="packages"></param>
         /// <returns></returns>
-        /// <exception cref="ValidationException">If any of the specified packages are not and cannot be installed</exception>
         public T RequireAptPackage(params string[] packages)
         {
             target.Executes(async (
