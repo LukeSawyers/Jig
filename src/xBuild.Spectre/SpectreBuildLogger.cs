@@ -107,7 +107,7 @@ public class SpectreBuildLogger :
 
     public async ValueTask OnBuildInitialized()
     {
-        var executingTargets = _buildContext.Targets.Keys.ToHashSet();
+        var executingTargets = _buildContext.TargetResults.Keys.ToHashSet();
         var targetsInOrder = _buildContext.TargetGraph.TriggerGraph
             .TopologicalSort()
             .Where(t => executingTargets.Contains(t))

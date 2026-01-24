@@ -25,8 +25,8 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     private void AssertTargetExecuted(TestTarget target, TargetExecutionResultType resultType)
     {
         target.Executed.Should().BeTrue();
-        BuildContext.Targets.Should().ContainKey(target);
-        var result = BuildContext.Targets[target];
+        BuildContext.TargetResults.Should().ContainKey(target);
+        var result = BuildContext.TargetResults[target];
         result.Should().NotBeNull();
         result.ResultType.Should().Be(resultType);
     }
@@ -40,7 +40,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     private void AssertTargetNotPlanned(TestTarget target)
     {
         target.Executed.Should().BeFalse();
-        BuildContext.Targets.Should().NotContainKey(target);
+        BuildContext.TargetResults.Should().NotContainKey(target);
     }
 
     [Fact]

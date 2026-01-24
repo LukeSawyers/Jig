@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.CommandLine;
 using System.Diagnostics;
+using QuikGraph.Algorithms;
 using xBuild.Build.Hooks;
 using xBuild.Logging;
 using xBuild.Options;
@@ -31,9 +32,10 @@ public class BuildRunner(
 )
 {
     public IServiceProvider Services { get; } = serviceProvider;
-    
+
     public async Task ExecuteAsync(string[] args)
     {
+        // Collect Targets and options 
         var allTargets = buildTargetCollections
             .SelectMany(r => r.Targets)
             .DistinctBy(t => t.Name)
@@ -47,44 +49,23 @@ public class BuildRunner(
             .SelectMany(c => c.Options)
             .ToArray();
 
-        await BuildRootCommand(allTargets, arguments, options).Parse(args).InvokeAsync();
-    }
+        // Build main dependency graph and check for cycles
+        var allTargetsGraph = new TargetGraph(allTargets);
 
-    private RootCommand BuildRootCommand(
-        ImmutableDictionary<string, ITarget> allTargets,
-        IBuildArgument[] arguments,
-        IBuildOption[] options
-    )
-    {
-        var targetsDescription = allTargets.Values
-            .Where(t => !t.Unlisted)
-            .StringJoin(t =>
+        if (allTargetsGraph.ExecutionGraphCycles.Any())
+        {
+            logger.LogError($"Cycles in execution graph detected. Adjust targets to ensure that cycles are eliminated:");
+
+            foreach (var c in allTargetsGraph.ExecutionGraphCycles)
             {
-                var str = $"  {t.Name} : {t.Description}";
-                var triggersTargets = t.Triggers
-                    .Select(f => f())
-                    .Where(t => allTargets.Values.Contains(t))
-                    .Where(triggered => !triggered.Unlisted)
-                    .Select(triggered => triggered.Name)
-                    .ToArray();
+                logger.LogInformation($"  - {c.Source.Name} <--> {c.Target.Name}");
+            }
 
-                if (triggersTargets.Length != 0)
-                {
-                    str += $" -> [{triggersTargets.StringJoin(", ")}]";
-                }
+            return;
+        }
 
-                str += Environment.NewLine;
-
-                return str;
-            });
-
-        var rootDescription =
-            $"""
-             TACTICAL NUKE INCOMING - Announcer, 2009
-
-             Targets:
-             {targetsDescription}
-             """;
+        // Build the root command
+        var rootDescription = GetCommandDescription(allTargetsGraph);
 
         var rootCommand = new RootCommand(rootDescription);
 
@@ -112,46 +93,79 @@ public class BuildRunner(
                 option.Set(parseResult);
             }
 
-            var includedTargets = allTargets
-                .ExceptBy(buildOptions.Exclude.Value, p => p.Key)
-                .ToDictionary();
-
-            var targetGraph = new TargetGraph(includedTargets);
-            buildContext.TargetGraph = targetGraph;
-
-            if (targetGraph.ExecutionGraphCycles.Any())
-            {
-                logger.LogErrorFormat($"Cycles in execution graph detected. Adjust targets to ensure that cycles are eliminated:");
-
-                foreach (var c in targetGraph.ExecutionGraphCycles)
-                {
-                    logger.LogInformationFormat($"  - {c.Source.Name} <--> {c.Target.Name}");
-                }
-
-                return;
-            }
-
-            var invokedTargets = buildOptions.Target.Value.ToArray();
-            var triggeredTargets = targetGraph.CollectTriggeredTargets(invokedTargets);
-
-            foreach (var target in triggeredTargets)
-            {
-                buildContext.Targets[target] = null;
-            }
-
-            foreach (var handler in buildInitializedHandlers)
-            {
-                await handler.OnBuildInitialized();
-            }
-            
-            await RunTargetsAsync(
-                targetGraph,
-                triggeredTargets,
-                buildOptions.Skip.Value.ToHashSet()
-            );
+            await RunAsync(allTargets);
         });
 
-        return rootCommand;
+        // Run
+        await rootCommand
+            .Parse(args)
+            .InvokeAsync();
+    }
+
+    private async Task RunAsync(ImmutableDictionary<string, ITarget> allTargets)
+    {
+        var includedTargets = allTargets
+            .ExceptBy(buildOptions.Exclude.Value, p => p.Key)
+            .ToDictionary();
+
+        var targetGraph = new TargetGraph(includedTargets);
+        buildContext.TargetGraph = targetGraph;
+
+        var invokedTargets = buildOptions.Target.Value.ToArray();
+        var triggeredTargets = targetGraph.CollectTriggeredTargets(invokedTargets);
+
+        foreach (var target in triggeredTargets)
+        {
+            buildContext.TargetResults[target] = null;
+        }
+
+        foreach (var handler in buildInitializedHandlers)
+        {
+            await handler.OnBuildInitialized();
+        }
+
+        await RunTargetsAsync(
+            targetGraph,
+            triggeredTargets,
+            buildOptions.Skip.Value.ToHashSet()
+        );
+    }
+
+    private static string GetCommandDescription(TargetGraph allTargets)
+    {
+        var targetsDescription = allTargets.ExecutionGraph
+            .TopologicalSort()
+            .Where(t => !t.Unlisted)
+            .Reverse()
+            .StringJoin(t =>
+            {
+                var str = $"  {t.Name} : {t.Description}";
+                var triggersTargets = t.Triggers
+                    .Select(f => f())
+                    .Where(t => allTargets.AllTargets.Values.Contains(t))
+                    .Where(triggered => !triggered.Unlisted)
+                    .Select(triggered => triggered.Name)
+                    .ToArray();
+
+                if (triggersTargets.Length != 0)
+                {
+                    str += $" -> [{triggersTargets.StringJoin(", ")}]";
+                }
+
+                str += Environment.NewLine;
+
+                return str;
+            });
+
+        var rootDescription =
+            $"""
+             TACTICAL NUKE INCOMING - Announcer, 2009
+
+             Targets:
+             {targetsDescription}
+             """;
+
+        return rootDescription;
     }
 
     private async Task RunTargetsAsync(
@@ -229,9 +243,9 @@ public class BuildRunner(
         {
             buildContext.Status = BuildStatus.Succeeded;
         }
-        
+
         buildContext.ElapsedTime = sw.Elapsed;
-        
+
         foreach (var buildCompletedHandler in buildCompletedHandlers)
         {
             await buildCompletedHandler.OnBuildCompleted();

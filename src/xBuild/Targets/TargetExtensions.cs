@@ -14,7 +14,7 @@ public static class TargetExtensions
         /// <returns></returns>
         public T Executes(Delegate execution)
         {
-            target.Executions.Add(execution);
+            target.Executions.Add(new TargetExecution(execution,  string.Empty));
             return target;
         }
 

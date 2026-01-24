@@ -42,5 +42,5 @@ public class Target(
     bool ITarget.Unlisted { get; set; }
 
     /// <inheritdoc />
-    IList<Delegate> ITarget.Executions { get; } = new List<Delegate>();
+    IList<TargetExecution> ITarget.Executions { get; } = new List<TargetExecution>();
 }

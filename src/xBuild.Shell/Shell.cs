@@ -11,15 +11,12 @@ public abstract class Shell(IBaseLogger logger)
     ///     Build a command from the supplied string
     /// </summary>
     /// <param name="command">The command to execute</param>
-    /// <param name="executeMode">
-    /// The execute mode to use
-    /// Defaults to the mode confiured in the shell if not specified
-    /// </param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
     public Command Command(
         FormattableString command,
-        ShellLoggingOptions? loggingOptions = null
+        CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
+        ShellLoggingOptions? logging = null
     )
     {
         var sanitizedCommand = FormattableStringFactory.Create(
@@ -47,16 +44,16 @@ public abstract class Shell(IBaseLogger logger)
             .WithArguments(shellCommand.Args)
             .WithWorkingDirectory(Directory.GetCurrentDirectory())
             .WithEnvironmentVariables(shellCommand.EnvironmentVariables)
-            .WithValidation(CommandResultValidation.ZeroExitCode);
+            .WithValidation(validation);
 
-        loggingOptions ??= ShellLoggingOptions.StandardOutput | ShellLoggingOptions.StandardError;
+        logging ??= ShellLoggingOptions.StandardOutput | ShellLoggingOptions.StandardError;
 
-        if (loggingOptions.Value.HasFlag(ShellLoggingOptions.StandardOutput))
+        if (logging.Value.HasFlag(ShellLoggingOptions.StandardOutput))
         {
             cmd = cmd.WithStandardOutputPipe(PipeTarget.ToDelegate(s => logger.LogOutputFormat(s)));
         }
 
-        if (loggingOptions.Value.HasFlag(ShellLoggingOptions.StandardError))
+        if (logging.Value.HasFlag(ShellLoggingOptions.StandardError))
         {
             cmd = cmd.WithStandardErrorPipe(PipeTarget.ToDelegate(line =>
             {
@@ -96,7 +93,7 @@ public abstract class Shell(IBaseLogger logger)
         format = format.Replace('\n', ' ');
         var logCommandString = string.Format(format, arguments);
 
-        logger.LogInformationFormat(
+        logger.LogInformation(
             $"{logCommandString} @ {Directory.GetCurrentDirectory()}"
         );
     }

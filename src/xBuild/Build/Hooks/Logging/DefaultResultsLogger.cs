@@ -17,19 +17,19 @@ public class DefaultResultsLogger(
     {
         logger.LogInformationFormat("Build Results:");
 
-        foreach (var (target, result) in buildContext.Targets)
+        foreach (var (target, result) in buildContext.TargetResults)
         {
             var resultType = result?.ResultType ?? TargetExecutionResultType.Inconclusive;
-            logger.LogInformationFormat($" - {target.Name} : {resultType} {result?.ExecutionTime.TotalSeconds:F1}s");
+            logger.LogInformation($" - {target.Name} : {resultType} {result?.ExecutionTime.TotalSeconds:F1}s");
         }
 
         switch (buildContext.Status)
         {
             case BuildStatus.Succeeded:
-                logger.LogErrorFormat($"Build Failed: {buildContext.ElapsedTime.TotalSeconds:F1}s");
+                logger.LogError($"Build Failed: {buildContext.ElapsedTime.TotalSeconds:F1}s");
                 break;
             case BuildStatus.Failed:
-                logger.LogInformationFormat($"Build Succeeded: {buildContext.ElapsedTime.TotalSeconds:F1}s");
+                logger.LogInformation($"Build Succeeded: {buildContext.ElapsedTime.TotalSeconds:F1}s");
                 break;
         }
     }

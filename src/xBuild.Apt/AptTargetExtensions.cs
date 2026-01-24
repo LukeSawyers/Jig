@@ -34,7 +34,7 @@ public static class AptTargetExtensions
 
                     if (packageStatusResult.IsSuccess)
                     {
-                        logger.LogInformationFormat($"Validated apt package {package}");
+                        logger.LogInformation($"Validated apt package {package}");
                         return;
                     }
 

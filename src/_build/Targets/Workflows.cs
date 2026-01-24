@@ -13,7 +13,7 @@ public class Workflows(
             () => dotnet.Test,
             () => dotnet.Pack,
             () => staticAnalysis.Inspect,
-            () => staticAnalysis.LicenseCheck,
+            () => staticAnalysis.ValidateLicenses,
             () => staticAnalysis.PackageDescriptionCheck,
             () => staticAnalysis.CountLines
         );

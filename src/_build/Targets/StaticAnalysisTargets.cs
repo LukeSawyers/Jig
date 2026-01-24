@@ -17,7 +17,7 @@ namespace _build.Targets;
 public class StaticAnalysisTargets : ITargetProvider
 {
     ITarget Cleanup => field ??= new Target(description: "Cleans up code")
-        .Executes($"jetbrains.resharper.globaltools cleanupcode {BuildConstants.SolutionPath}");
+        .ExecutesDotNetTool($"jetbrains.resharper.globaltools cleanupcode {BuildConstants.SolutionPath}");
 
     public ITarget Inspect => field ??= new Target(description: "Inspects code for issues")
         .After(() => Cleanup)
@@ -39,28 +39,29 @@ public class StaticAnalysisTargets : ITargetProvider
 
             var warnings = results.Count(r => r.Level == FailureLevel.Warning);
             var errors = results.Count(r => r.Level == FailureLevel.Error);
-            logger.LogInformationFormat($"Inspect Results: {warnings} Warnings {errors} Errors");
+            logger.LogInformation($"Inspect Results: {warnings} Warnings {errors} Errors");
         });
 
-    public ITarget LicenseCheck => field ??= new Target(description: "Checks nuget package licenses")
-        .Executes(async (ITargetLogger logger, TargetShell shell, CancellationToken stoppingToken) =>
-            {
-                 var results = await shell.DotnetToolCommand(
-                         $"""
-                          nuget-license -i {BuildConstants.SolutionPath} 
-                          --include-transitive 
-                          --output JsonPretty 
-                          --allowed-license-types allowed-licenses.json
-                          -override override-licenses.json
-                          """
-                     )
-                    .WithValidation(CommandResultValidation.None)
-                    .ExecuteAndCaptureJsonOutputAsync<LicenseValidationResult[]>(stoppingToken);
+    public ITarget CheckLicenses => field ??= new Target(description: "Checks nuget package licenses")
+        .ExecutesDotNetToolWithJsonOutput<LicenseValidationResult[]>(
+            $"""
+             nuget-license -i {BuildConstants.SolutionPath} 
+             --include-transitive 
+             --output JsonPretty
+             --allowed-license-types allowed-licenses.json
+             -override override-licenses.json
+             """,
+            validation: CommandResultValidation.None
+        );
 
-                results.Should().NotBeNull()
+    public ITarget ValidateLicenses => field ??= new Target(description: "Validates nuget package licenses")
+        .DependsOn(() => CheckLicenses)
+        .Executes((ITargetLogger logger, LicenseValidationResult[] validationResults) =>
+            {
+                validationResults.Should().NotBeNull()
                     .And.Subject.Any().Should().BeTrue("there should be at least some license validation results");
 
-                var errorResults = results
+                var errorResults = validationResults
                     .Where(r => r.ValidationErrors?.Any() == true)
                     .ToArray();
 
@@ -76,7 +77,7 @@ public class StaticAnalysisTargets : ITargetProvider
                              """
                         );
 
-                    logger.LogErrorFormat(
+                    logger.LogError(
                         $"{result.PackageId} {result.PackageVersion} had validation errors:{validationErrorStrings}"
                     );
                 }

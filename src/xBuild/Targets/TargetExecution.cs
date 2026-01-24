@@ -1,34 +1,91 @@
-using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using xBuild.Build;
 
 namespace xBuild.Targets;
 
-public static class TargetExecution
+public record TargetExecution(
+    Delegate Execution,
+    string Description
+)
 {
-    public static async ValueTask ExecuteAsync(
+    public async ValueTask ExecuteAsync(
+        IBuildContext buildContext,
         IServiceProvider services,
-        Delegate execution,
-        CancellationToken cancellation
+        CancellationToken stoppingToken
     )
     {
-        var args = execution.Method.GetParameters()
-            .Select(p => p.ParameterType == typeof(CancellationToken)
-                ? cancellation
-                : services.GetRequiredService(p.ParameterType))
+        var args = Execution.Method
+            .GetParameters()
+            .Select(ResolveParameterDependency)
             .ToArray();
 
-        var result = execution.DynamicInvoke(args);
+        var result = Execution.DynamicInvoke(args);
         switch (result)
         {
+            // Await tasks and if they have results, add them as outputs
             case Task task:
             {
-                await task;
+                await HandleTask(task);
                 break;
             }
             case ValueTask valueTask:
             {
-                await valueTask;
+                await HandleTask(valueTask.AsTask());
                 break;
             }
+            // TODO: Handle tuples, these should get broken out
+            // All other non null return values get added as outputs 
+            case { } value:
+            {
+                buildContext.TargetOutputs[value.GetType()] = value;
+                break;
+            }
+        }
+
+        return;
+
+        object? ResolveParameterDependency(ParameterInfo p)
+        {
+            if (p.ParameterType == typeof(CancellationToken))
+            {
+                return stoppingToken;
+            }
+
+            var result = services.GetService(p.ParameterType);
+            result ??= buildContext.TargetOutputs.TryGetValue(p.ParameterType, out var val) ? val : null;
+
+            if (result is null && !p.IsOptional)
+            {
+                throw new InvalidOperationException($"Unable to resolve target dependency {p.ParameterType.Name}");
+            }
+
+            return result;
+        }
+        
+        async Task HandleTask(Task task)
+        {
+            await task;
+            var taskType = task.GetType();
+            if (!taskType.IsGenericType)
+            {
+                return;
+            }
+
+            var value = taskType
+                .GetProperty(nameof(Task<>.Result))!
+                .GetValue(task);
+
+            if (value is null)
+            {
+                return;
+            }
+
+            if (value.GetType().FullName == "System.Threading.Tasks.VoidTaskResult")
+            {
+                return;
+            }
+
+            buildContext.TargetOutputs[value.GetType()] = value;
         }
     }
 }

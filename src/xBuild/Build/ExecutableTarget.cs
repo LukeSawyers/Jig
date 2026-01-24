@@ -55,7 +55,7 @@ public class ExecutableTarget(
     private async ValueTask RunTargetInternalAsync()
     {
         var result = await ExecuteTargetAsync();
-        buildContext.Targets[target] = result;
+        buildContext.TargetResults[target] = result;
         
         foreach (var targetCompletedHandler in targetCompletedHandlers)
         {
@@ -100,7 +100,7 @@ public class ExecutableTarget(
         {
             foreach (var execution in target.Executions)
             {
-                await TargetExecution.ExecuteAsync(scope.ServiceProvider, execution, buildContext.StoppingToken);
+                await execution.ExecuteAsync(buildContext, scope.ServiceProvider, buildContext.StoppingToken);
             }
             
             return new TargetExecutionResult(TargetExecutionResultType.Succeeded, targetContext.Stopwatch.Elapsed);

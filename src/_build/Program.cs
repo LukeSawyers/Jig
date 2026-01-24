@@ -7,11 +7,11 @@ using xBuild.UserInput;
 
 var arguments = new[]
 {
-    // nameof(DotnetTargets.Pack),
+    nameof(DotnetTargets.Build),
     // nameof(DotnetTargets.Test),
-    nameof(DotnetTargets.NugetPush),
+    // nameof(DotnetTargets.NugetPush),
     // nameof(StaticAnalysisTargets.Inspect),
-    // nameof(StaticAnalysisTargets.LicenseCheck),
+    // nameof(StaticAnalysisTargets.ValidateLicenses),
     // nameof(StaticAnalysisTargets.PackageDescriptionCheck),
     // nameof(StaticAnalysisTargets.CountLines),
     // nameof(Workflows.MergeCheck),

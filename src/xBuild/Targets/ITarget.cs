@@ -11,7 +11,7 @@ public interface ITarget
     ///     The name of this target
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     ///     Description of this target
     /// </summary>
@@ -21,7 +21,7 @@ public interface ITarget
     ///     true: Target is not shown in CLI, but still invokable
     /// </summary>
     bool Unlisted { get; set; }
-    
+
     /// <summary>
     ///     Targets that are executed before this target
     /// </summary>
@@ -36,7 +36,7 @@ public interface ITarget
     ///     Targets that are executed by this target 
     /// </summary>
     IList<Func<ITarget>> Triggers { get; }
-    
+
     /// <summary>
     ///     Targets that execute by this target 
     /// </summary>
@@ -55,5 +55,5 @@ public interface ITarget
     /// <summary>
     ///     Dynamic delegate to execute for this target
     /// </summary>
-    IList<Delegate> Executions { get; }
+    IList<TargetExecution> Executions { get; }
 }

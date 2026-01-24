@@ -34,7 +34,7 @@ public class NotificationEmitter(
         {
             await shell.Command(
                     $"notify-send --transient \"{message}\"",
-                    ShellLoggingOptions.StandardError
+                    logging: ShellLoggingOptions.StandardError
                 )
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync();
@@ -43,7 +43,7 @@ public class NotificationEmitter(
         {
             await shell.Command(
                     $"osascript -e \"display notification \\\"{message}\\\"",
-                    ShellLoggingOptions.StandardError
+                    logging: ShellLoggingOptions.StandardError
                 )
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync();

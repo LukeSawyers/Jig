@@ -12,5 +12,7 @@ public interface IBuildContext
 
     TargetGraph TargetGraph { get; }
 
-    IDictionary<ITarget, TargetExecutionResult?> Targets { get; }
+    IDictionary<ITarget, TargetExecutionResult?> TargetResults { get; }
+    
+    IDictionary<Type, object> TargetOutputs { get; }
 }

@@ -1,4 +1,5 @@
 using Polly;
+using xBuild.Build;
 using xBuild.Targets;
 
 namespace xBuild.Polly;
@@ -19,17 +20,24 @@ public static class PollyExtensions
             {
                 throw new InvalidOperationException("No executions available on target");
             }
-            
+
             var lastIndex = target.Executions.Count - 1;
             var lastExecution = target.Executions[lastIndex];
-            target.Executions[lastIndex] = (IServiceProvider provider, CancellationToken cancellation) =>
+
+            var pipeline = builder(new ResiliencePipelineBuilder()).Build();
+
+            ValueTask WrappedExecution(IBuildContext context, IServiceProvider provider, CancellationToken cancellation)
             {
-                var pipeline = builder(new ResiliencePipelineBuilder()).Build();
                 return pipeline.ExecuteAsync(ct =>
                 {
                     var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation, ct);
-                    return TargetExecution.ExecuteAsync(provider, lastExecution, linkedCancellation.Token);
+                    return lastExecution.ExecuteAsync(context, provider, linkedCancellation.Token);
                 });
+            }
+
+            target.Executions[lastIndex] = lastExecution with
+            {
+                Execution = WrappedExecution
             };
 
             return target;

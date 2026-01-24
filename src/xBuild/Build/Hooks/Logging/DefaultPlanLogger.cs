@@ -20,7 +20,7 @@ public class DefaultPlanLogger(
             return;
         }
 
-        var triggeredTargetNames = buildContext.Targets.Keys.Select(t => t.Name).ToArray();
+        var triggeredTargetNames = buildContext.TargetResults.Keys.Select(t => t.Name).ToArray();
 
         logger.LogInformationFormat("Invoking:");
 
