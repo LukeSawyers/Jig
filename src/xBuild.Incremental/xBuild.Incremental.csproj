@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            xBuild extension adding desktop build notification hooks.
+        </Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\xBuild\xBuild.csproj" />
+    </ItemGroup>
+
+</Project>
