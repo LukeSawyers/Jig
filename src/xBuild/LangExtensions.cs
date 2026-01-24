@@ -48,9 +48,9 @@ public static class LangExtensions
             return arg;
         }
         
-        public T ApplyIf(bool condition, Action<T> func)
+        public T If(Func<bool> condition, Action<T> func)
         {
-            if (condition)
+            if (condition())
             {
                 func(arg);
             }

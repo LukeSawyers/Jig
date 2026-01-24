@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using CliWrap;
 using xBuild.Logging;
 using xBuild.Options;
@@ -9,7 +10,11 @@ public abstract class Shell(IBaseLogger logger)
     /// <summary>
     ///     Build a command from the supplied string
     /// </summary>
-    /// <param name="command"></param>
+    /// <param name="command">The command to execute</param>
+    /// <param name="executeMode">
+    /// The execute mode to use
+    /// Defaults to the mode confiured in the shell if not specified
+    /// </param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
     public Command Command(
@@ -17,15 +22,34 @@ public abstract class Shell(IBaseLogger logger)
         ShellLoggingOptions? loggingOptions = null
     )
     {
-        loggingOptions ??= ShellLoggingOptions.StandardOutput | ShellLoggingOptions.StandardError;
-        var shellCommand = ShellCommand.Parse(command.ToString());
-        LogCommand(command);
+        var sanitizedCommand = FormattableStringFactory.Create(
+            command.Format
+                .Replace(" \r\n ", " ")
+                .Replace(" \n ", " ")
+                .Replace(" \r ", " ")
+                .Replace("\r\n ", " ")
+                .Replace("\n ", " ")
+                .Replace("\r ", " ")
+                .Replace(" \r\n", " ")
+                .Replace(" \n", " ")
+                .Replace(" \r", " ")
+                .Replace("\r\n", " ")
+                .Replace("\n", " ")
+                .Replace("\r", " "),
+            command.GetArguments()
+        );
 
-        var cmd = Cli.Wrap("/bin/bash")
+        LogCommand(sanitizedCommand);
+
+        var shellCommand = ShellCommand.Parse(sanitizedCommand.ToString());
+
+        var cmd = Cli.Wrap(shellCommand.Tool)
+            .WithArguments(shellCommand.Args)
             .WithWorkingDirectory(Directory.GetCurrentDirectory())
             .WithEnvironmentVariables(shellCommand.EnvironmentVariables)
-            .WithArguments($"-lc \"{shellCommand.Tool} {shellCommand.Args.Replace("\"", "\\\"")}\"")
             .WithValidation(CommandResultValidation.ZeroExitCode);
+
+        loggingOptions ??= ShellLoggingOptions.StandardOutput | ShellLoggingOptions.StandardError;
 
         if (loggingOptions.Value.HasFlag(ShellLoggingOptions.StandardOutput))
         {

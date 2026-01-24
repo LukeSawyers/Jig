@@ -34,7 +34,7 @@ public class DotnetTargets : ITargetProvider
     public ITarget NugetPush => field ??= new Target(description: "Tests the solution")
         .DependsOn(() => Pack)
         .Executes(() => NugetApiKey.Value.Should().NotBeNull())
-        .Executes(
+        .ExecutesDefaultShell(
             $"""
              dotnet nuget push **/xBuild*.nupkg 
              --api-key {NugetApiKey} 

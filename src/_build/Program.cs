@@ -3,18 +3,18 @@ using xBuild.Build;
 using xBuild.DesktopNotifications;
 using xBuild.Serilog;
 using xBuild.Shell;
-using xBuild.Spectre;
 using xBuild.UserInput;
 
 var arguments = new[]
 {
-    nameof(DotnetTargets.Pack),
-    nameof(DotnetTargets.Test),
-    nameof(StaticAnalysisTargets.Inspect),
-    nameof(StaticAnalysisTargets.LicenseCheck),
-    nameof(StaticAnalysisTargets.PackageDescriptionCheck),
-    nameof(StaticAnalysisTargets.CountLines),
-    nameof(Workflows.MergeCheck),
+    // nameof(DotnetTargets.Pack),
+    // nameof(DotnetTargets.Test),
+    nameof(DotnetTargets.NugetPush),
+    // nameof(StaticAnalysisTargets.Inspect),
+    // nameof(StaticAnalysisTargets.LicenseCheck),
+    // nameof(StaticAnalysisTargets.PackageDescriptionCheck),
+    // nameof(StaticAnalysisTargets.CountLines),
+    // nameof(Workflows.MergeCheck),
     // "--help"
 };
 
@@ -27,5 +27,5 @@ await new Build("src", defaultBuildConcurrency: BuildConcurrency.Parallel)
     .AddTargetsFromEntryAssembly()
     // .AddTargets<Workflows>()
     // .AddTargets<DotnetTargets>()
-    .ExecuteAsync(args);
-    // .ExecuteAsync(arguments);
+    // .ExecuteAsync(args);
+    .ExecuteAsync(arguments);
