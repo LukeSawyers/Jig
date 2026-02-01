@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using xBuild.Build;
-using xBuild.Build.Hooks;
+using xBuild.Build.Extension;
 using xBuild.Shell;
 
 namespace xBuild.DesktopNotifications;

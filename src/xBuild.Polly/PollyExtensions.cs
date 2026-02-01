@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Polly;
 using xBuild.Build;
 using xBuild.Targets;
@@ -26,14 +27,16 @@ public static class PollyExtensions
 
             var pipeline = builder(new ResiliencePipelineBuilder()).Build();
 
-            ValueTask WrappedExecution(IBuildContext context, IServiceProvider provider, CancellationToken cancellation)
+            ValueTask WrappedExecution(
+                ILogger logger,
+                IBuildContext context,
+                IServiceProvider provider,
+                CancellationToken cancellation
+            ) => pipeline.ExecuteAsync(ct =>
             {
-                return pipeline.ExecuteAsync(ct =>
-                {
-                    var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation, ct);
-                    return lastExecution.ExecuteAsync(context, provider, linkedCancellation.Token);
-                });
-            }
+                var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation, ct);
+                return lastExecution.ExecuteAsync(logger, context, provider, linkedCancellation.Token);
+            });
 
             target.Executions[lastIndex] = lastExecution with
             {

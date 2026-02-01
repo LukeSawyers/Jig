@@ -1,13 +1,15 @@
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using xBuild.Build;
-using xBuild.Logging;
+using xBuild.Build.Extension.Logging;
+using xBuild.Logger;
 
 namespace xBuild.Serilog;
 
 public static class SerilogExtensions
 {
-    public static ConsoleTheme DefaultSystemColorTheme => new SystemConsoleTheme(
+    private static ConsoleTheme DefaultSystemColorTheme => new SystemConsoleTheme(
         new Dictionary<ConsoleThemeStyle, SystemConsoleThemeStyle>
         {
             [ConsoleThemeStyle.Text] = new(),
@@ -29,23 +31,23 @@ public static class SerilogExtensions
             },
             [ConsoleThemeStyle.Null] = new()
             {
-                Foreground = ConsoleColor.Cyan
+                Foreground = ConsoleColor.DarkMagenta
             },
             [ConsoleThemeStyle.String] = new()
             {
-                Foreground = ConsoleColor.Cyan
+                Foreground = ConsoleColor.DarkYellow
             },
             [ConsoleThemeStyle.Number] = new()
             {
-                Foreground = ConsoleColor.Cyan
+                Foreground = ConsoleColor.DarkYellow
             },
             [ConsoleThemeStyle.Boolean] = new()
             {
-                Foreground = ConsoleColor.Cyan
+                Foreground = ConsoleColor.DarkYellow
             },
             [ConsoleThemeStyle.Scalar] = new()
             {
-                Foreground = ConsoleColor.Cyan
+                Foreground = ConsoleColor.DarkYellow
             },
             [ConsoleThemeStyle.LevelVerbose] = new()
             {
@@ -60,7 +62,7 @@ public static class SerilogExtensions
             [ConsoleThemeStyle.LevelInformation] = new()
             {
                 Foreground = ConsoleColor.White,
-                Background = ConsoleColor.Cyan
+                Background = ConsoleColor.DarkCyan
             },
             [ConsoleThemeStyle.LevelWarning] = new()
             {
@@ -76,18 +78,23 @@ public static class SerilogExtensions
             {
                 Foreground = ConsoleColor.White,
                 Background = ConsoleColor.DarkRed
-            }
+            },
         });
 
     extension<T>(T build) where T : IBuild
     {
+        /// <summary>
+        ///     Add serilog logging to the build 
+        /// </summary>
+        /// <param name="configure"></param>
+        /// <returns></returns>
         public T AddSerilog(Func<LoggerConfiguration, LoggerConfiguration>? configure = null)
         {
             var configuration = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(
-                    outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss}: {Message:l}{NewLine}{Exception}",
+                    outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss} " + $"{{{BuildStateIds.Target}}}" + ": {Message:l}{NewLine}{Exception}",
                     theme: DefaultSystemColorTheme,
                     applyThemeToRedirectedOutput: true
                 );
@@ -99,8 +106,9 @@ public static class SerilogExtensions
 
             Log.Logger = configuration.CreateLogger();
 
-            build.AddLogging<SeriLogBuildLogger>();
-
+            build.Services.AddLogging(b => b.AddSerilog(Log.Logger));
+            build.AddDefaultLoggingExtensions();
+            
             return build;
         }
     }

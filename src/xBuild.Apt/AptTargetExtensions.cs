@@ -1,9 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CliWrap;
-using xBuild.UserInput;
-using xBuild.Logging;
-using xBuild.Shell;
+using Microsoft.Extensions.Logging;
 using xBuild.Targets;
+using xBuild.UserInput;
 
 namespace xBuild.Apt;
 
@@ -19,13 +18,21 @@ public static class AptTargetExtensions
         /// <returns></returns>
         public T RequireAptPackage(params string[] packages)
         {
-            target.Executes(async (
-                ITargetLogger logger,
-                IUserInput userInput,
-                TargetShell shell
-            ) =>
+            foreach (var package in packages)
             {
-                foreach (var package in packages)
+                target.RequireAptPackageInternal(package);
+            }
+
+            return target;
+        }
+
+        private void RequireAptPackageInternal(string package)
+        {
+            target.Executes(async (
+                    ILogger logger,
+                    IUserInput userInput,
+                    Shell.Shell shell
+                ) =>
                 {
                     var packageStatusResult = await shell
                         .Command($"dpkg -s {package}")
@@ -34,7 +41,7 @@ public static class AptTargetExtensions
 
                     if (packageStatusResult.IsSuccess)
                     {
-                        logger.LogInformation($"Validated apt package {package}");
+                        logger.LogInformation("Validated apt package {Package}", package);
                         return;
                     }
 
@@ -58,10 +65,9 @@ public static class AptTargetExtensions
                         .Command($"sudo apt-get install {package}")
                         .WithStandardInputPipe(userInput.CreateInputPipeSource())
                         .ExecuteAsync();
-                }
-            });
-            
-            return target;
+                },
+                $"Require that apt package {package} is installed, and prompt user to install if not"
+            );
         }
     }
 }

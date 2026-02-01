@@ -6,7 +6,7 @@ Provides `ITarget` extensions to wrap target delegates in Polly resilience polic
 
 ## Usage
 
-Call `.WithResilience()` on a target to wrap previously defined execution with the specified policy.
+Call `.WithResilience()` on a target to wrap the previously defined execution with the specified policy.
 
 ```csharp
 ITarget Target => field ??= new Target()

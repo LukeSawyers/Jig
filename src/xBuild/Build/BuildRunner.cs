@@ -1,9 +1,10 @@
 using System.Collections.Immutable;
 using System.CommandLine;
 using System.Diagnostics;
-using QuikGraph.Algorithms;
-using xBuild.Build.Hooks;
-using xBuild.Logging;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
+using xBuild.Build.Extension;
+using xBuild.Lang;
 using xBuild.Options;
 using xBuild.Targets;
 
@@ -18,8 +19,8 @@ namespace xBuild.Build;
 /// <param name="serviceProvider"></param>
 /// <param name="buildOptions"></param>
 /// <param name="buildTargetCollections"></param>
-public class BuildRunner(
-    IBuildLogger logger,
+internal class BuildRunner(
+    ILogger<BuildRunner> logger,
     BuildContext buildContext,
     BuildOptions buildOptions,
     IServiceProvider serviceProvider,
@@ -29,18 +30,21 @@ public class BuildRunner(
     IEnumerable<IBuildCompletedHandler> buildCompletedHandlers,
     IEnumerable<ITargetStartedHandler> targetStartedHandlers,
     IEnumerable<ITargetCompletedHandler> targetCompletedHandlers
-)
+) : IBuildRunner
 {
+    private bool _disposed;
+
     public IServiceProvider Services { get; } = serviceProvider;
 
-    public async Task ExecuteAsync(string[] args)
+    public async ValueTask<int> ExecuteAsync(string[] args)
     {
-        // Collect Targets and options 
-        var allTargets = buildTargetCollections
-            .SelectMany(r => r.Targets)
-            .DistinctBy(t => t.Name)
-            .ToImmutableDictionary(t => t.Name);
+        // Print version info
+        var info = typeof(BuildRunner).Assembly
+            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+            .Version;
 
+        logger.LogInformation("xBuild version {Version}", info);
+        
         var arguments = buildOptionCollections
             .SelectMany(c => c.Arguments)
             .ToArray();
@@ -48,26 +52,9 @@ public class BuildRunner(
         var options = buildOptionCollections
             .SelectMany(c => c.Options)
             .ToArray();
-
-        // Build main dependency graph and check for cycles
-        var allTargetsGraph = new TargetGraph(allTargets);
-
-        if (allTargetsGraph.ExecutionGraphCycles.Any())
-        {
-            logger.LogError($"Cycles in execution graph detected. Adjust targets to ensure that cycles are eliminated:");
-
-            foreach (var c in allTargetsGraph.ExecutionGraphCycles)
-            {
-                logger.LogInformation($"  - {c.Source.Name} <--> {c.Target.Name}");
-            }
-
-            return;
-        }
-
+        
         // Build the root command
-        var rootDescription = GetCommandDescription(allTargetsGraph);
-
-        var rootCommand = new RootCommand(rootDescription);
+        var rootCommand = new RootCommand();
 
         foreach (var argument in arguments)
         {
@@ -92,88 +79,65 @@ public class BuildRunner(
             {
                 option.Set(parseResult);
             }
+            
+            // Collect Targets and options 
+            var allTargets = buildTargetCollections
+                .SelectMany(r => r.Targets)
+                .DistinctBy(t => t.Name)
+                .ToImmutableDictionary(t => t.Name);
+        
+            // Build main dependency graph and check for cycles
+            var includedTargets = allTargets
+                .ExceptBy(buildOptions.Exclude.Value, p => p.Key)
+                .ToDictionary();
 
-            await RunAsync(allTargets);
+            var targetGraph = buildContext.TargetGraph = new TargetGraph(includedTargets, buildOptions.Target.Value.ToArray());
+
+            if (targetGraph.AllTargetsExecutionGraphCycles.Any())
+            {
+                logger.LogError("Cycles in execution graph detected. Adjust targets to ensure that cycles are eliminated:");
+
+                foreach (var c in targetGraph.AllTargetsExecutionGraphCycles)
+                {
+                    logger.LogInformation("  - {SourceName} <--> {TargetName}", c.Source.Name, c.Target.Name);
+                }
+
+                return;
+            }
+            
+            // Build initialized
+            foreach (var handler in buildInitializedHandlers)
+            {
+                await handler.OnBuildInitialized();
+            }
+
+            await RunAsync();
         });
 
         // Run
         await rootCommand
             .Parse(args)
             .InvokeAsync();
+
+        return buildContext.Status == BuildStatus.Succeeded ? 0 : 1;
     }
-
-    private async Task RunAsync(ImmutableDictionary<string, ITarget> allTargets)
+    
+    private async ValueTask RunAsync()
     {
-        var includedTargets = allTargets
-            .ExceptBy(buildOptions.Exclude.Value, p => p.Key)
-            .ToDictionary();
-
-        var targetGraph = new TargetGraph(includedTargets);
-        buildContext.TargetGraph = targetGraph;
-
-        var invokedTargets = buildOptions.Target.Value.ToArray();
-        var triggeredTargets = targetGraph.CollectTriggeredTargets(invokedTargets);
+        if (buildContext.BuildCancelled.IsCancellationRequested)
+        {
+            return;
+        }
+        
+        var triggeredTargets = buildContext.TargetGraph.InvokedExecutionGraph.Vertices.ToArray();
 
         foreach (var target in triggeredTargets)
         {
             buildContext.TargetResults[target] = null;
         }
 
-        foreach (var handler in buildInitializedHandlers)
-        {
-            await handler.OnBuildInitialized();
-        }
+        var skippedTargets = buildOptions.Skip.Value.ToHashSet();
 
-        await RunTargetsAsync(
-            targetGraph,
-            triggeredTargets,
-            buildOptions.Skip.Value.ToHashSet()
-        );
-    }
-
-    private static string GetCommandDescription(TargetGraph allTargets)
-    {
-        var targetsDescription = allTargets.ExecutionGraph
-            .TopologicalSort()
-            .Where(t => !t.Unlisted)
-            .Reverse()
-            .StringJoin(t =>
-            {
-                var str = $"  {t.Name} : {t.Description}";
-                var triggersTargets = t.Triggers
-                    .Select(f => f())
-                    .Where(t => allTargets.AllTargets.Values.Contains(t))
-                    .Where(triggered => !triggered.Unlisted)
-                    .Select(triggered => triggered.Name)
-                    .ToArray();
-
-                if (triggersTargets.Length != 0)
-                {
-                    str += $" -> [{triggersTargets.StringJoin(", ")}]";
-                }
-
-                str += Environment.NewLine;
-
-                return str;
-            });
-
-        var rootDescription =
-            $"""
-             TACTICAL NUKE INCOMING - Announcer, 2009
-
-             Targets:
-             {targetsDescription}
-             """;
-
-        return rootDescription;
-    }
-
-    private async Task RunTargetsAsync(
-        TargetGraph targetGraph,
-        IReadOnlyCollection<ITarget> triggeredTargets,
-        HashSet<string> skippedTargets
-    )
-    {
         var sw = Stopwatch.StartNew();
 
         var executableTargets = new Dictionary<ITarget, ExecutableTarget>();
@@ -196,7 +160,7 @@ public class BuildRunner(
                     return executableTarget;
                 }
 
-                var after = targetGraph.ExecutionGraph.TryGetOutEdges(target, out var outEdges)
+                var after = buildContext.TargetGraph.AllTargetsExecutionGraph.TryGetOutEdges(target, out var outEdges)
                     ? outEdges
                         .Select(e => GetOrAddExecutableTarget(e.Target))
                         .WhereNotNull()
@@ -229,10 +193,7 @@ public class BuildRunner(
 
             case BuildConcurrency.Parallel:
             {
-                await Task.WhenAll(executableTargets.Values
-                    .Select(async t => await t.ExecuteParallelAsync())
-                );
-
+                await Task.WhenAll(executableTargets.Values.Select(async t => await t.ExecuteParallelAsync()));
                 break;
             }
             default:
@@ -249,6 +210,18 @@ public class BuildRunner(
         foreach (var buildCompletedHandler in buildCompletedHandlers)
         {
             await buildCompletedHandler.OnBuildCompleted();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+            if (serviceProvider is IAsyncDisposable disposable)
+            {
+                await disposable.DisposeAsync();
+            }
         }
     }
 }

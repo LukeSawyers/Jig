@@ -1,14 +1,14 @@
 using CliWrap;
 using Microsoft.Toolkit.Uwp.Notifications;
 using xBuild.Build;
-using xBuild.Build.Hooks;
+using xBuild.Build.Extension;
 using xBuild.Shell;
 using xBuild.Targets;
 
 namespace xBuild.DesktopNotifications;
 
 public class NotificationEmitter(
-    BuildShell shell,
+    Shell.Shell shell,
     IBuildContext buildContext
 ) : ITargetCompletedHandler, IBuildCompletedHandler
 {
@@ -33,7 +33,7 @@ public class NotificationEmitter(
         if (OperatingSystem.IsLinux())
         {
             await shell.Command(
-                    $"notify-send --transient \"{message}\"",
+                    $"notify-send --transient --app-name=xBuild \"{message}\"",
                     logging: ShellLoggingOptions.StandardError
                 )
                 .WithValidation(CommandResultValidation.None)

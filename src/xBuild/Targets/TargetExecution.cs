@@ -1,25 +1,36 @@
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 using xBuild.Build;
 
 namespace xBuild.Targets;
 
 public record TargetExecution(
     Delegate Execution,
-    string Description
+    FormattableString Description
 )
 {
     public async ValueTask ExecuteAsync(
+        ILogger logger,
         IBuildContext buildContext,
         IServiceProvider services,
         CancellationToken stoppingToken
     )
     {
-        var args = Execution.Method
+        // var args = Execution.Method
+        //     .GetParameters()
+        //     .Select(ResolveParameterDependency)
+        //     .ToArray();
+
+        // var result = Execution.DynamicInvoke(args);
+        
+        var method = Execution.GetType().GetMethod("Invoke")!;
+        var args = method
             .GetParameters()
             .Select(ResolveParameterDependency)
             .ToArray();
-
-        var result = Execution.DynamicInvoke(args);
+        
+        var result = method.Invoke(Execution, args);
+        
         switch (result)
         {
             // Await tasks and if they have results, add them as outputs
@@ -49,6 +60,11 @@ public record TargetExecution(
             if (p.ParameterType == typeof(CancellationToken))
             {
                 return stoppingToken;
+            }
+
+            if (p.ParameterType == typeof(ILogger))
+            {
+                return logger;
             }
 
             var result = services.GetService(p.ParameterType);

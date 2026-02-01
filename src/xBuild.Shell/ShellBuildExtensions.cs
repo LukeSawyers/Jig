@@ -9,8 +9,7 @@ public static class ShellBuildExtensions
     {
         public T AddShell()
         {
-            build.Services.AddSingleton<BuildShell>();
-            build.Services.AddScoped<TargetShell>();
+            build.Services.AddSingleton<Shell>();
             return build;
         }
     }

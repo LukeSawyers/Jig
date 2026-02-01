@@ -41,7 +41,7 @@ public static class BuildExtensions
         }
 
         /// <summary>
-        ///     Add targets contained specified as static fields in <typeparamref name="T" />
+        ///     Add targets contained specified as static fields in <typeparamref name="TOptions" />
         /// </summary>
         public IBuild AddBuildOptions<TOptions>() where TOptions : class, IOptionsProvider
         {
@@ -51,7 +51,7 @@ public static class BuildExtensions
         }
         
         /// <summary>
-        ///     Add targets contained specified as static fields in <typeparamref name="T" />
+        ///     Add targets contained specified as static fields in <typeparamref name="TOptions" />
         /// </summary>
         public IBuild AddBuildOptions<TOptions>(TOptions instance) where TOptions : class, IOptionsProvider
         {

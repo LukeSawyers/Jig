@@ -25,35 +25,35 @@ public interface ITarget
     /// <summary>
     ///     Targets that are executed before this target
     /// </summary>
-    IList<Func<ITarget>> After { get; }
+    List<Func<ITarget>> After { get; }
 
     /// <summary>
     ///     Targets that are executed after this target
     /// </summary>
-    IList<Func<ITarget>> Before { get; }
+    List<Func<ITarget>> Before { get; }
 
     /// <summary>
     ///     Targets that are executed by this target 
     /// </summary>
-    IList<Func<ITarget>> Triggers { get; }
+    List<Func<ITarget>> Triggers { get; }
 
     /// <summary>
     ///     Targets that execute by this target 
     /// </summary>
-    IList<Func<ITarget>> TriggeredBy { get; }
+    List<Func<ITarget>> TriggeredBy { get; }
 
     /// <summary>
-    ///     true: Execute this target even if a prior task fails
+    ///     How this target responds to a prior target failing
     /// </summary>
-    bool ExecuteAfterFailure { get; set; }
+    UpstreamFailureMode UpstreamFailureMode { get; set; }
 
     /// <summary>
-    ///     true: Proceed with the build even if this task fails
+    ///     How this target's failure affects downstream targets
     /// </summary>
-    bool ProceedAfterFailure { get; set; }
+    DownstreamFailureMode DownstreamFailureMode { get; set; }
 
     /// <summary>
     ///     Dynamic delegate to execute for this target
     /// </summary>
-    IList<TargetExecution> Executions { get; }
+    List<TargetExecution> Executions { get; }
 }

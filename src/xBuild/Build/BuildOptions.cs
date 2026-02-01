@@ -15,7 +15,7 @@ public class BuildOptions(BuildConcurrency defaultBuildConcurrency) : IOptionsPr
         {
             Description = "Targets to include in the build. " +
                           "Targets specified and their dependencies (.Triggers, .DependsOn) are added to the target execution graph.",
-            Arity = ArgumentArity.OneOrMore
+            Arity = ArgumentArity.ZeroOrMore
         }
     );
 

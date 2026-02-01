@@ -1,8 +1,11 @@
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NeoSmart.AsyncLock;
-using xBuild.Build.Hooks;
-using xBuild.Logging;
+using xBuild.Build.Extension;
+using xBuild.Lang;
+using xBuild.Logger;
 using xBuild.Targets;
 
 namespace xBuild.Build;
@@ -54,22 +57,50 @@ public class ExecutableTarget(
 
     private async ValueTask RunTargetInternalAsync()
     {
-        var result = await ExecuteTargetAsync();
+        await using var scope = serviceProvider.CreateAsyncScope();
+        var logger = scope.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger(string.Empty);
+
+        using var _ = logger.BeginScope(new Dictionary<string, object>()
+        {
+            {
+                BuildStateIds.Target, target.Name
+            }
+        });
+
+        logger.LogInformation("Target Starting");
+        var result = await ExecuteTargetAsync(logger, serviceProvider);
+        var logLevel = result.ResultType switch
+        {
+            TargetExecutionResultType.Inconclusive => LogLevel.Warning,
+            TargetExecutionResultType.Succeeded => LogLevel.Information,
+            TargetExecutionResultType.Skipped => LogLevel.Warning,
+            TargetExecutionResultType.Aborted => LogLevel.Error,
+            TargetExecutionResultType.Failed => LogLevel.Error,
+            _ => LogLevel.Debug
+        };
+
+        logger.Log(logLevel, "Target {ResultType}", result.ResultType);
+
         buildContext.TargetResults[target] = result;
-        
+
         foreach (var targetCompletedHandler in targetCompletedHandlers)
         {
             await targetCompletedHandler.OnTargetCompleted(target, result);
         }
 
         // Determine whether to continue with the build
-        if (result.ResultType == TargetExecutionResultType.Failed && !target.ProceedAfterFailure)
+        if (result.ResultType == TargetExecutionResultType.Failed)
         {
             buildContext.Status = BuildStatus.Failed;
         }
     }
 
-    private async ValueTask<TargetExecutionResult> ExecuteTargetAsync()
+    private async ValueTask<TargetExecutionResult> ExecuteTargetAsync(
+        ILogger logger,
+        IServiceProvider serviceProvider
+    )
     {
         // If skipped, return that result
         if (skip)
@@ -78,47 +109,51 @@ public class ExecutableTarget(
         }
 
         // If a previous target has failed, only run if configured to do so
-        if (buildContext.Status == BuildStatus.Failed && !target.ExecuteAfterFailure)
+        var abortTarget = target.UpstreamFailureMode switch
+        {
+            // Abort if there are not any targets that have failed
+            UpstreamFailureMode.Abort => buildContext.TargetResults
+                .Select(p => p.Value?.Let(v => new
+                {
+                    DownstreamFailureMode = p.Key.DownstreamFailureMode,
+                    ResultType = v.ResultType
+                }))
+                .WhereNotNull()
+                .Any(o =>
+                    o.DownstreamFailureMode == DownstreamFailureMode.AbortAll &&
+                    o.ResultType != TargetExecutionResultType.Succeeded),
+            // Continue regardless of prior results
+            UpstreamFailureMode.Continue => false,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (abortTarget)
         {
             return new TargetExecutionResult(TargetExecutionResultType.Aborted, TimeSpan.Zero);
         }
-        
-        // Initialise the target scope
-        await using var scope = serviceProvider.CreateAsyncScope();
-        var targetContext = scope.ServiceProvider.GetRequiredService<TargetContext>();
-        targetContext.Target = target;
-        var targetLogger = scope.ServiceProvider.GetRequiredService<ITargetLogger>();
 
+        // Initialise the target scope
         foreach (var targetStartedHandler in targetStartedHandlers)
         {
             await targetStartedHandler.OnTargetStarted(target);
         }
-        
-        targetContext.Stopwatch.Start();
-        
+
+        var sw = Stopwatch.StartNew();
+
         try
         {
             foreach (var execution in target.Executions)
             {
-                await execution.ExecuteAsync(buildContext, scope.ServiceProvider, buildContext.StoppingToken);
+                await execution.ExecuteAsync(logger, buildContext, serviceProvider, buildContext.BuildCancelled);
             }
-            
-            return new TargetExecutionResult(TargetExecutionResultType.Succeeded, targetContext.Stopwatch.Elapsed);
+
+            return new TargetExecutionResult(TargetExecutionResultType.Succeeded, sw.Elapsed);
         }
         catch (Exception e)
         {
             var exception = e is TargetInvocationException ? e.InnerException ?? e : e;
-
-            if (target.ProceedAfterFailure)
-            {
-                targetLogger.LogWarningFormat(exception.Message);
-            }
-            else
-            {
-                targetLogger.LogErrorFormat(exception.Message);
-            }
-
-            return new TargetExecutionResult(TargetExecutionResultType.Failed, targetContext.Stopwatch.Elapsed);
+            logger.LogError(exception, exception.Message);
+            return new TargetExecutionResult(TargetExecutionResultType.Failed, sw.Elapsed);
         }
     }
 }

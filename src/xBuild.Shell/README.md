@@ -28,6 +28,17 @@ using the environment variables and arguments supplied in the string. The comman
 will be logged to the available `ITargetLogger` depending on the `ShellLoggingOptions` provided. By default all logging 
 options are enabled.
 
+### Shell Execution
+
+Commands can be executed in shells instead of process invocation: 
+
+- `ExectutesBash`: Runs the command using bash
+- `ExectutesZsh`: Runs the command using zsh
+- `ExectutesDash`: Runs the command using dash/sh
+- `ExectutesAsh`: Runs the command using BusyBox ash
+- `ExectutesPowerShell`: Runs the command using powershell/pwsh
+- `ExectutesNativeShell`: Runs the command using the default shell depending on the OS and environment
+
 ### DotNet Tool Execution
 
 Call `ExecutesDotNetTool()` on a target specifying the dotnet tool to call and arguments to supply to it:
@@ -40,24 +51,7 @@ ITarget Target => field ??= new Target()
 ```
 
 This command definition will be transformed into a `dotnet tool exec` command running the tool with the targets 
-supplied, running the tool with the specified arguments. 
-
-This 
-
-### Multiple Commands
-
-Multiple commands can be supplied to be executed sequentially.
-
-```csharp
-ITarget Target => field ??= new Target()
-    .Executes(
-        [
-            $"ENV_VAR1=val1 dotnet build Solution.sln --verbosity {Verbosity.Value}", 
-            $"ENV_VAR1=val1 dotnet test Solution.sln --verbosity {Verbosity.Value}"
-        ]
-    );
-```
-
+supplied, running the tool with the specified arguments.
 
 ### Manual Invocation
 

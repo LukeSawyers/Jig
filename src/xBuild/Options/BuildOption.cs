@@ -35,7 +35,7 @@ public class BuildOption<T>(
     }
  
     public T Value { get; private set; } = defaultValue;
-
+    
     /// <inheritdoc/>
     public object? RawValue => Value;
     

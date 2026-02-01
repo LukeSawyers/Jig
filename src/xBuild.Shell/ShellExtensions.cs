@@ -1,6 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using CliWrap;
+using Newtonsoft.Json;
+using xBuild.Lang;
+using xBuild.Options;
 using xBuild.Targets;
 
 namespace xBuild.Shell;
@@ -15,11 +18,19 @@ public static class ShellExtensions
         /// <returns></returns>
         public ITarget ExecutesDotNetToolWithJsonOutput<TOutput>(
             FormattableString command,
+            JsonSerializerSettings? serializerSettings = null,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.Executes(async (TargetShell shell, CancellationToken stoppingToken) => await shell
-            .DotnetToolCommand(command, validation, logging)
-            .ExecuteAndCaptureJsonOutputAsync<TOutput>(stoppingToken));
+        )
+        {
+            var description = command.ToDotnetToolCommand().Sanitize().Concat($" : {typeof(TOutput).Name}");
+                
+            return target.Executes(async (Shell shell, CancellationToken stoppingToken) => await shell
+                    .DotnetToolCommand(command, validation, logging)
+                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(), stoppingToken),
+                description
+            );
+        }
     }
 
     extension<T>(T target) where T : ITarget
@@ -28,41 +39,23 @@ public static class ShellExtensions
         ///     Instructs the <paramref name="target" /> to execute the supplied bash-like <paramref name="command" />
         /// </summary>
         /// <exception cref="ArgumentException">If a tool is not specified</exception>
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public T Executes(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.Executes([command], validation, logging);
-
-        /// <summary>
-        ///     Instructs the <paramref name="target" /> to execute the supplied bash-like <paramref name="commands" />
-        /// </summary>
-        /// <exception cref="ArgumentException">If a tool is not specified</exception>
-        public T Executes(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
-        ) => target.Executes(async (TargetShell shell) =>
+        )
         {
-            foreach (var command in commands)
-            {
-                await shell.Command(command, validation, logging).ExecuteAsync();
-            }
-        });
+            target.Executions.Add(new TargetExecution(
+                async Task (Shell shell) => await shell
+                    .Command(command, validation, logging)
+                    .ExecuteAsync(),
+                command.Sanitize().Redact()
+            ));
 
-        /// <summary>
-        ///     Adds an execution running the specified dotnet tool <paramref name="commands" /> in exec mode
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesDotNetTool(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
-        ) => target.Executes(
-            commands.Select(ToDotnetToolCommand),
-            validation,
-            logging
-        );
+            return target;
+        }
 
         /// <summary>
         ///     Adds an execution running the specified dotnet tool <paramref name="command" /> in exec mode
@@ -72,22 +65,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesDotNetTool(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in the platform's native shell
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesNativeShell(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToNativeShellCommand),
+            command.ToDotnetToolCommand(),
             validation,
             logging
         );
@@ -96,26 +75,13 @@ public static class ShellExtensions
         ///     Adds an execution running the specified <paramref name="command" /> in the platform's native shell
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="NotSupportedException">If the current platform isn't supported</exception>
         public T ExecutesDefaultShell(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesNativeShell(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in bash
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesBash(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToBashCommand),
+            command.ToNativeShellCommand(),
             validation,
             logging
         );
@@ -128,22 +94,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesBash(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in zsh
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesZsh(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToZshCommand),
+            command.ToBashCommand(),
             validation,
             logging
         );
@@ -156,22 +108,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesZsh(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in zsh
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesDash(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToDashCommand),
+            command.ToZshCommand(),
             validation,
             logging
         );
@@ -184,22 +122,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesDash(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in zsh
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesAsh(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToAshCommand),
+            command.ToDashCommand(),
             validation,
             logging
         );
@@ -212,22 +136,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesAsh(
-            [command],
-            validation,
-            logging
-        );
-
-        /// <summary>
-        ///     Adds an execution running the specified <paramref name="commands" /> in zsh
-        /// </summary>
-        /// <returns></returns>
-        public T ExecutesPowershell(
-            IEnumerable<FormattableString> commands,
-            CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
-            ShellLoggingOptions? logging = null
         ) => target.Executes(
-            commands.Select(ToPowershellCommand),
+            command.ToAshCommand(),
             validation,
             logging
         );
@@ -240,8 +150,8 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.ExecutesPowershell(
-            [command],
+        ) => target.Executes(
+            command.ToPowerShellCommand(),
             validation,
             logging
         );
@@ -318,11 +228,75 @@ public static class ShellExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => shell.Command(command.ToPowershellCommand(), validation, logging);
+        ) => shell.Command(command.ToPowerShellCommand(), validation, logging);
     }
 
     extension(FormattableString command)
     {
+        /// <summary>
+        ///     Normalizes whitespace in command strings 
+        /// </summary>
+        public FormattableString Sanitize() => FormattableStringFactory.Create(
+            command.Format
+                .Replace(" \r\n ", " ")
+                .Replace(" \n ", " ")
+                .Replace(" \r ", " ")
+                .Replace("\r\n ", " ")
+                .Replace("\n ", " ")
+                .Replace("\r ", " ")
+                .Replace(" \r\n", " ")
+                .Replace(" \n", " ")
+                .Replace(" \r", " ")
+                .Replace("\r\n", " ")
+                .Replace("\n", " ")
+                .Replace("\r", " "),
+            command.GetArguments()
+        );
+
+        /// <summary>
+        ///     Redacts sensitive <see cref="IBuildOption"/> arguments and arguments with :redact formatting
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        public FormattableString Redact()
+        {
+            const string redactedString = "[REDACTED]";
+            var format = command.Format;
+            var arguments = command.GetArguments();
+            for (var i = 0; i < arguments.LongLength; i++)
+            {
+                var argument = arguments[i];
+                if (argument is IBuildOption option)
+                {
+                    arguments[i] = option.Sensitive ? redactedString : option.RawValue;
+                }
+                else if (format.Contains($"{{{i}:redact}}"))
+                {
+                    arguments[i] = redactedString;
+                }
+            }
+
+            var shellCommand = ShellCommand.Parse(command.ToString());
+
+            format = format.Replace(shellCommand.Tool, "{Tool}");
+            format += " @ {CurrentDirectory}";
+
+            arguments = new[]
+                {
+                    shellCommand.Tool
+                }
+                .Concat(arguments)
+                .Append(Directory.GetCurrentDirectory())
+                .ToArray();
+            
+            return FormattableStringFactory.Create(format, arguments);
+        }
+
+        /// <summary>
+        ///     Converts the supplied command, assumed to be a dotnet tool invocation, into the command required to run that tool.
+        /// </summary>
+        /// <returns></returns>
         public FormattableString ToDotnetToolCommand()
         {
             var tool = ShellCommand.Parse(command.ToString()).Tool;
@@ -332,14 +306,29 @@ public static class ShellExtensions
             );
         }
 
+        /// <summary>
+        ///     Wraps this command to be executed in bash shell
+        /// </summary>
         public FormattableString ToBashCommand() => command.ToPosixShellCommand("bash");
 
+        /// <summary>
+        ///     Wraps this command to be executed in zsh shell
+        /// </summary>
         public FormattableString ToZshCommand() => command.ToPosixShellCommand("zsh");
 
+        /// <summary>
+        ///     Wraps this command to be executed in busybox shell
+        /// </summary>
         public FormattableString ToAshCommand() => command.ToPosixShellCommand("ash");
 
+        /// <summary>
+        ///     Wraps this command to be executed in dash/sh shell
+        /// </summary>
         public FormattableString ToDashCommand() => command.ToPosixShellCommand("sh");
 
+        /// <summary>
+        ///     Wraps this command to be executed in the specified posix-style <paramref name="shell"/>
+        /// </summary>
         public FormattableString ToPosixShellCommand(string shell)
         {
             var envVarStrings = ShellCommand.Parse(command.ToString()).EnvironmentVariables
@@ -360,7 +349,10 @@ public static class ShellExtensions
             );
         }
 
-        public FormattableString ToPowershellCommand()
+        /// <summary>
+        ///     Wraps this command to be executed in powershell
+        /// </summary>
+        public FormattableString ToPowerShellCommand()
         {
             var envVarStrings = ShellCommand.Parse(command.ToString()).EnvironmentVariables
                 .Select(e => $"{e.Key}={e.Value}")
@@ -387,7 +379,7 @@ public static class ShellExtensions
         {
             if (OperatingSystem.IsWindows())
             {
-                return command.ToPowershellCommand();
+                return command.ToPowerShellCommand();
             }
 
             var defaultShell = Environment.GetEnvironmentVariable("SHELL");
@@ -415,7 +407,7 @@ public static class ShellExtensions
             // MacOS Catalina+ defaults to Zsh
             if (OperatingSystem.IsMacOSVersionAtLeast(10, 15))
             {
-                return command.ToPowershellCommand();
+                return command.ToPowerShellCommand();
             }
 
             if (OperatingSystem.IsMacOS())

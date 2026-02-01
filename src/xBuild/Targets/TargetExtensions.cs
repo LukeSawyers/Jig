@@ -1,3 +1,7 @@
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using xBuild.Lang;
+
 namespace xBuild.Targets;
 
 /// <summary>
@@ -5,16 +9,71 @@ namespace xBuild.Targets;
 /// </summary>
 public static class TargetExtensions
 {
+    private static FormattableString DescriptionFromDelegate(Delegate execution)
+    {
+        FormattableString result = $"(";
+        var parameters = execution.Method.GetParameters();
+        for (var index = 0; index < parameters.Length; index++)
+        {
+            var parameter = parameters[index];
+            var isLast = index == parameters.Length - 1;
+            var typeName = parameter.ParameterType.Name + (parameter.IsOptional ? "?" : string.Empty);
+            result = result
+                .Concat($"{typeName} ")
+                .ConcatString(parameter.Name)
+                .LetIf(!isLast, r => r.ConcatString(", "));
+        }
+            
+        return result.Concat($") => {execution.Method.ReturnParameter.ParameterType.Name}");
+    }
+    
+    extension(ITarget target)
+    {
+        /// <summary>
+        ///     Adds an expression to be executed to this target
+        /// </summary>
+        /// <param name="execution">The expression to execute</param>
+        /// <returns></returns>
+        public ITarget ExecutesExpression<T1>(Expression<Action<T1>> execution)
+        {
+            target.Executions.Add(new TargetExecution(execution.Compile(), FormattableStringFactory.Create(execution.ToString())));
+            return target;
+        }
+
+        /// <summary>
+        ///     Adds an expression to be executed to this target
+        /// </summary>
+        /// <param name="execution">The expression to execute</param>
+        /// <returns></returns>
+        public ITarget ExecutesExpression<T1, T2>(Expression<Action<T1, T2>> execution)
+        {
+            target.Executions.Add(new TargetExecution(execution.Compile(), FormattableStringFactory.Create(execution.ToString())));
+            return target;
+        }
+    }
+    
     extension<T>(T target) where T : ITarget
     {
         /// <summary>
         ///     Adds a delegate to be executed to this target
         /// </summary>
-        /// <param name="execution"></param>
+        /// <param name="execution">The function to execute</param>
+        /// <param name="description">Description of the function</param>
         /// <returns></returns>
-        public T Executes(Delegate execution)
+        public T Executes(Delegate execution, FormattableString? description = null)
         {
-            target.Executions.Add(new TargetExecution(execution,  string.Empty));
+            target.Executions.Add(new TargetExecution(execution, description ?? DescriptionFromDelegate(execution)));
+            return target;
+        }
+
+        /// <summary>
+        ///     Adds an expression to be executed to this target
+        /// </summary>
+        /// <param name="execution">The expression to execute</param>
+        /// <returns></returns>
+        public T ExecutesExpression(Expression<Action> execution)
+        {
+            target.Executes(execution.Compile(), FormattableStringFactory.Create(execution.ToString()));
             return target;
         }
 
@@ -24,7 +83,7 @@ public static class TargetExtensions
         /// <returns></returns>
         public T ExecuteAfterFailure()
         {
-            target.ExecuteAfterFailure = true;
+            target.UpstreamFailureMode = UpstreamFailureMode.Continue;
             return target;
         }
 
@@ -34,7 +93,7 @@ public static class TargetExtensions
         /// <returns></returns>
         public T ProceedAfterFailure()
         {
-            target.ProceedAfterFailure = true;
+            target.DownstreamFailureMode = DownstreamFailureMode.Continue;
             return target;
         }
 
@@ -146,7 +205,7 @@ public static class TargetExtensions
         /// </summary>
         /// <param name="targets"></param>
         /// <returns></returns>
-        public T DependsOn(params Func<ITarget>[] targets)
+        public T DependentOn(params Func<ITarget>[] targets)
         {
             target.Triggers(targets);
             return target.After(targets);

@@ -9,11 +9,6 @@ public class Target(
     string description = ""
 ) : ITarget
 {
-    private readonly List<Func<ITarget>> _afterTargets = new();
-    private readonly List<Func<ITarget>> _beforeTargets = new();
-    private readonly List<Func<ITarget>> _triggersTargets = new();
-    private readonly List<Func<ITarget>> _triggeredByTargets = new();
-
     /// <inheritdoc />
     public string Name { get; } = name;
     
@@ -21,26 +16,26 @@ public class Target(
     public string Description { get; } = description;
 
     /// <inheritdoc />
-    IList<Func<ITarget>> ITarget.After => _afterTargets;
-    
-    /// <inheritdoc />
-    IList<Func<ITarget>> ITarget.Before => _beforeTargets;
+    List<Func<ITarget>> ITarget.After { get; } = new();
 
     /// <inheritdoc />
-    IList<Func<ITarget>> ITarget.Triggers => _triggersTargets;
-    
-    /// <inheritdoc />
-    IList<Func<ITarget>> ITarget.TriggeredBy => _triggeredByTargets;
+    List<Func<ITarget>> ITarget.Before { get; } = new();
 
     /// <inheritdoc />
-    bool ITarget.ExecuteAfterFailure { get; set; }
+    List<Func<ITarget>> ITarget.Triggers { get; } = new();
 
     /// <inheritdoc />
-    bool ITarget.ProceedAfterFailure { get; set; }
+    List<Func<ITarget>> ITarget.TriggeredBy { get; } = new();
+
+    /// <inheritdoc />
+    UpstreamFailureMode ITarget.UpstreamFailureMode { get; set; } = UpstreamFailureMode.Abort;
+
+    /// <inheritdoc />
+    DownstreamFailureMode ITarget.DownstreamFailureMode { get; set; } = DownstreamFailureMode.AbortAll;
 
     /// <inheritdoc />
     bool ITarget.Unlisted { get; set; }
 
     /// <inheritdoc />
-    IList<TargetExecution> ITarget.Executions { get; } = new List<TargetExecution>();
+    List<TargetExecution> ITarget.Executions { get; } = new();
 }

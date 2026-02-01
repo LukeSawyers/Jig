@@ -1,19 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using xBuild.Targets;
+﻿using DotNetEnv;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace xBuild.Build;
-
-public class ExecutableBuild(ServiceProvider serviceProvider) : IAsyncDisposable
-{
-    public IServiceProvider ServiceProvider => serviceProvider;
-    
-    public BuildRunner BuildRunner => serviceProvider.GetRequiredService<BuildRunner>();
-
-    public async ValueTask DisposeAsync()
-    {
-        await serviceProvider.DisposeAsync();
-    }
-}
 
 /// <summary>
 ///     Entry point for a build.
@@ -21,18 +9,19 @@ public class ExecutableBuild(ServiceProvider serviceProvider) : IAsyncDisposable
 /// </summary>
 public class Build : IBuild
 {
+    /// <inheritdoc />
+    public IServiceCollection Services => _services;
+
     private readonly ServiceCollection _services = new();
 
     public Build(
-        string workingDirectory = "", 
+        string workingDirectory = "",
         BuildConcurrency defaultBuildConcurrency = BuildConcurrency.Sequential
     )
     {
         // Load from .env
-        DotNetEnv.Env
-            .TraversePath()
-            .Load(AppContext.BaseDirectory);
-        
+        Env.TraversePath().Load(AppContext.BaseDirectory);
+
         // Add Build Context
         var rootDirectory = new DirectoryInfo(AppContext.BaseDirectory);
         while (true)
@@ -53,11 +42,10 @@ public class Build : IBuild
         rootDirectory = new DirectoryInfo(Path.Combine(rootDirectory.FullName, workingDirectory));
 
         Directory.SetCurrentDirectory(rootDirectory.FullName);
-        
-        var stoppingToken = new CancellationTokenSource();
-        Console.CancelKeyPress += (_, _) => stoppingToken.Cancel();
-        
-        var buildContext = new BuildContext(stoppingToken.Token);
+
+        var buildContext = new BuildContext();
+        Console.CancelKeyPress += (_, _) => buildContext.Cancel();
+
         _services.AddSingleton(buildContext);
         _services.AddSingleton<IBuildContext>(s => s.GetRequiredService<BuildContext>());
 
@@ -66,10 +54,8 @@ public class Build : IBuild
 
         // Add Build Runner
         _services.AddSingleton<BuildRunner>();
-        _services.AddScoped<TargetContext>();
     }
 
-    public IServiceCollection Services => _services;
-    
-    public ExecutableBuild Create() => new(_services.BuildServiceProvider());
+    /// <inheritdoc />
+    public IBuildRunner Create() => _services.BuildServiceProvider().GetRequiredService<BuildRunner>();
 }

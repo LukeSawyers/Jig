@@ -6,11 +6,11 @@ public interface IBuild
 {
     IServiceCollection Services { get; }
 
-    ExecutableBuild Create();
+    IBuildRunner Create();
 
-    async Task ExecuteAsync(string[] args)
+    async ValueTask<int> ExecuteAsync(string[] args)
     {
         await using var executable = Create();
-        await executable.BuildRunner.ExecuteAsync(args);
+        return await executable.ExecuteAsync(args);
     }
 }

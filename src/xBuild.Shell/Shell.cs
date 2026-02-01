@@ -1,11 +1,9 @@
-using System.Runtime.CompilerServices;
 using CliWrap;
-using xBuild.Logging;
-using xBuild.Options;
+using Microsoft.Extensions.Logging;
 
 namespace xBuild.Shell;
 
-public abstract class Shell(IBaseLogger logger)
+public class Shell(ILogger<Shell> logger)
 {
     /// <summary>
     ///     Build a command from the supplied string
@@ -19,26 +17,11 @@ public abstract class Shell(IBaseLogger logger)
         ShellLoggingOptions? logging = null
     )
     {
-        var sanitizedCommand = FormattableStringFactory.Create(
-            command.Format
-                .Replace(" \r\n ", " ")
-                .Replace(" \n ", " ")
-                .Replace(" \r ", " ")
-                .Replace("\r\n ", " ")
-                .Replace("\n ", " ")
-                .Replace("\r ", " ")
-                .Replace(" \r\n", " ")
-                .Replace(" \n", " ")
-                .Replace(" \r", " ")
-                .Replace("\r\n", " ")
-                .Replace("\n", " ")
-                .Replace("\r", " "),
-            command.GetArguments()
-        );
+        command = command.Sanitize();
+        var redacted = command.Redact();
+        logger.LogInformation(redacted.Format, redacted.GetArguments());
 
-        LogCommand(sanitizedCommand);
-
-        var shellCommand = ShellCommand.Parse(sanitizedCommand.ToString());
+        var shellCommand = ShellCommand.Parse(command.ToString());
 
         var cmd = Cli.Wrap(shellCommand.Tool)
             .WithArguments(shellCommand.Args)
@@ -50,7 +33,21 @@ public abstract class Shell(IBaseLogger logger)
 
         if (logging.Value.HasFlag(ShellLoggingOptions.StandardOutput))
         {
-            cmd = cmd.WithStandardOutputPipe(PipeTarget.ToDelegate(s => logger.LogOutputFormat(s)));
+            cmd = cmd.WithStandardOutputPipe(PipeTarget.ToDelegate(line =>
+            {
+                if (line.Contains("warn", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    logger.LogWarning(line);
+                }
+                else if (line.Contains("error", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    logger.LogError(line);
+                }
+                else
+                {
+                    logger.LogDebug(line);
+                }
+            }));
         }
 
         if (logging.Value.HasFlag(ShellLoggingOptions.StandardError))
@@ -59,42 +56,15 @@ public abstract class Shell(IBaseLogger logger)
             {
                 if (line.Contains("warn", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.LogWarningFormat(line);
+                    logger.LogWarning(line);
                 }
                 else
                 {
-                    logger.LogErrorFormat(line);
+                    logger.LogError(line);
                 }
             }));
         }
 
         return cmd;
-    }
-
-    private void LogCommand(FormattableString command)
-    {
-        const string redactedString = "[REDACTED]";
-        var format = command.Format;
-        var arguments = command.GetArguments();
-        for (var i = 0; i < arguments.Length; i++)
-        {
-            var argument = arguments[i];
-            if (argument is IBuildOption option)
-            {
-                arguments[i] = option.Sensitive ? redactedString : option.RawValue;
-            }
-            else
-            {
-                format = format.Replace($"{{{i}:redact}}", redactedString);
-            }
-        }
-
-        format = format.Replace('\r', ' ');
-        format = format.Replace('\n', ' ');
-        var logCommandString = string.Format(format, arguments);
-
-        logger.LogInformation(
-            $"{logCommandString} @ {Directory.GetCurrentDirectory()}"
-        );
     }
 }

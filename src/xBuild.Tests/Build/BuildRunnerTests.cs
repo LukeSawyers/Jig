@@ -2,23 +2,24 @@ using System.CommandLine;
 using System.Runtime.CompilerServices;
 using AwesomeAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using xBuild.Build;
-using xBuild.Logging;
+using xBuild.Lang;
 using xBuild.Options;
 using xBuild.Targets;
 using Xunit.Abstractions;
+using Target = xBuild.Targets.Target;
 
 namespace xBuild.Tests.Build;
 
 public class BuildRunnerTests(ITestOutputHelper outputHelper)
 {
-    private BuildContext BuildContext => Build.ServiceProvider.GetRequiredService<BuildContext>();
+    private BuildContext BuildContext => Build.Services.GetRequiredService<BuildContext>();
 
-    private TestTargets Targets => Build.ServiceProvider.GetRequiredService<TestTargets>();
+    private TestTargets Targets => Build.Services.GetRequiredService<TestTargets>();
 
-    private ExecutableBuild Build => field ??= new xBuild.Build.Build()
-        .Apply(b => { b.Services.AddSingleton(outputHelper); })
-        .AddLogging<XUnitBuildLogger>()
+    private IBuildRunner Build => field ??= new xBuild.Build.Build()
+        .Apply(b => b.Services.AddLogging(b => b.AddXunit(outputHelper)))
         .AddTargets<TestTargets>()
         .Create();
 
@@ -44,10 +45,16 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     }
 
     [Fact]
+    public void METHOD()
+    {
+        throw new Exception();
+    }
+    
+    [Fact]
     public async Task RunsAllSpecifiedTargets()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.BasicTask1), nameof(TestTargets.BasicTask2)]);
+        await Build.ExecuteAsync([nameof(TestTargets.BasicTask1), nameof(TestTargets.BasicTask2)]);
 
         // Assert
         AssertTargetExecuted(Targets.BasicTask1, TargetExecutionResultType.Succeeded);
@@ -58,7 +65,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task RunsOnlySpecifiedTargets()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.BasicTask1)]);
+        await Build.ExecuteAsync([nameof(TestTargets.BasicTask1)]);
 
         // Assert
         AssertTargetExecuted(Targets.BasicTask1, TargetExecutionResultType.Succeeded);
@@ -72,7 +79,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
         var stringArgValue = "someString";
 
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.BasicTask1), "--arg1", "--arg2", stringArgValue]);
+        await Build.ExecuteAsync([nameof(TestTargets.BasicTask1), "--arg1", "--arg2", stringArgValue]);
 
         // Assert
         Targets.Arg1.Value.Should().BeTrue();
@@ -83,7 +90,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task RunsDependentTargets()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.DependentTaskC)]);
+        await Build.ExecuteAsync([nameof(TestTargets.DependentTaskC)]);
 
         // Assert
         // Basic tasks should not get run at all
@@ -107,7 +114,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task RunsDependentTargets_ExceptExcluded()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([
+        await Build.ExecuteAsync([
             nameof(TestTargets.DependentTaskC), "--exclude", nameof(TestTargets.DependentTaskA)
         ]);
 
@@ -128,7 +135,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task RunsTriggeredTargets()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.TriggeredTaskA)]);
+        await Build.ExecuteAsync([nameof(TestTargets.TriggeredTaskA)]);
 
         // Assert
         // A is executed directly 
@@ -143,7 +150,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task RunsTriggeredTargets_ExceptExcluded()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([
+        await Build.ExecuteAsync([
             nameof(TestTargets.TriggeredTaskA), "--exclude", nameof(TestTargets.TriggeredTaskC)
         ]);
 
@@ -160,7 +167,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task ProceedAfterFailure_RunsSubsequentTasks()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.ProceedAfterFailure)]);
+        await Build.ExecuteAsync([nameof(TestTargets.ProceedAfterFailure)]);
 
         // Assert
         // Proceed after failure task was run, but failed
@@ -173,7 +180,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
     public async Task ExecuteAfterFailure_RunsSubsequentTasks()
     {
         // Act
-        await Build.BuildRunner.ExecuteAsync([nameof(TestTargets.ExecutedAfterFailure), nameof(TestTargets.BasicTask1)]);
+        await Build.ExecuteAsync([nameof(TestTargets.ExecutedAfterFailure), nameof(TestTargets.BasicTask1)]);
 
         // Assert
         // The failure task was run and failed
@@ -184,7 +191,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
         AssertTargetNotExecuted(Targets.BasicTask1);
     }
 
-    public class TestTarget : Target
+    private class TestTarget : Target
     {
         public TestTarget([CallerMemberName] string name = "") : base(name)
         {
@@ -215,7 +222,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
         public TestTarget DependentTaskA => field ??= new TestTarget();
 
         public TestTarget DependentTaskB => field ??= new TestTarget()
-            .DependsOn(() => DependentTaskA)
+            .DependentOn(() => DependentTaskA)
             .DependentFor(
                 () => DependentTaskC,
                 () => DependentTaskD
@@ -252,7 +259,7 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
             });
 
         public TestTarget ExecutedAfterFailure => field ??= new TestTarget()
-            .DependsOn(() => FailingTask)
+            .DependentOn(() => FailingTask)
             .ExecuteAfterFailure();
     }
 }

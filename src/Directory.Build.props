@@ -5,10 +5,11 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <IsPackable>true</IsPackable>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
         <!-- Package Metadata -->
-        <Version>0.1.1</Version>
+        <Version>0.2.0</Version>
         <PackageIcon>logo-128.png</PackageIcon>
         <Authors>xBuild Maintainers</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -38,4 +39,5 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
+    
 </Project>

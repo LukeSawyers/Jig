@@ -1,305 +1,288 @@
-# xBuild
+![Banner](./assets/banner-512.png)
 
-**Tactical NUKE** task-based build automation system built with .NET, 
-based on the incredible work on [NUKE Build](https://github.com/nuke-build/nuke) 
-by Matthias Koch and contributors. Tactical NUKE aims to follow the same objectives
-as NUKE with a greater emphasis on lower footprint, portability, and extensibility.
-
+An extensibility-first, low ceremony, C# task-based build automation system. Originally inspired
+by [NUKE Build](https://github.com/nuke-build/nuke).
 
 ## Getting Started
+
+Ensure your project is within a git repository:
+
+```shell
+git init
+```
 
 Create a new console application:
 
 ```shell
-dotnet new console -n _build
+dotnet new console -n build
 ```
+
 Add the package:
+
 ```shell
-dotnet add package TacticalBuild
+dotnet add package xBuild
+dotnet add package xBuild.Shell
+dotnet add package xBuild.Serilog
 ```
+
 ```xml
-<PackageReference Include="TacticalBuild" Version="X.Y.Z"/>
+
+<PackageReference Include="xBuild" Version="X.Y.Z"/>
+<PackageReference Include="xBuild.Shell" Version="X.Y.Z"/>
+<PackageReference Include="xBuild.Serilog" Version="X.Y.Z"/>
 ```
 
 Add Targets:
+
 ```csharp
 using System.CommandLine;
 using TacticalNuke.Targets;
 
 namespace _build.Targets;
 
-// Class dependency injection supported, including referencing other target classes
-public class BuildTargets(
-    InspectionTargets inspectionTargets
-) : IBuildTargets 
+public class Targets : IBuildTargets 
 {
-    public const string SolutionPath = "TacticalNuke.sln";
+    public const string SolutionPath = "xBuild.sln";
 
-    // System.CommandLine options supported
-    public BuildOption<string> Verbosity { get; } = new(
-        "minimal",
-        new Option<string>("--dotnet-verbosity")
-        {
-            Description = "Verbosity for dotnet tasks"
-        }
-    );
+    BuildOption<string> Verbosity { get; } = new("minimal", description: "Verbosity for dotnet tasks" );
 
-    // Targets specified as lazily evaluated properties. Name inferred and description provided:
     private ITarget Build => field ??= new Target(description: "Builds the solution")
-        // Targets able to directly execute bash-like commands with shell execution
-        .Executes($"""
-                   dotnet build {SolutionPath}
-                   --verbosity {Verbosity}
-                   """);
+        .Executes($"dotnet build {SolutionPath} --verbosity {Verbosity}");
 
     private ITarget Test => field ??= new Target(description: "Tests the solution")
-        // Specify the relative ordering of targets
-        .After(Build)
-        // Command arguments can be redacted with :redact - "dotnet test TacticalNuke.sln --verbosity [REDACTED]"
-        .Executes($"""
-                   dotnet test {SolutionPath} 
-                   --verbosity {Verbosity:redact}
-                   """);
+        .After(() => Build)
+        .Executes($"dotnet test {SolutionPath} --verbosity {Verbosity}");
 
     private ITarget MergeCheck => field ??= new Target(description: "Runs required merge checks")
-        // Targets can express dependency relationships, triggering execution of other targets
-        .DependsOn(
-            Build, 
-            // Can reference targets defined elsewhere
-            inspectionTargets.Inspect,
-            Test
-        );
-}
-
-// Multiple target classes supported
-public class InspectionTargets(
-    ILoggerFactory loggerFactory,
-) : IBuildTargets // Class dependency injection supported
-{
-    private ITarget RestoreDotnetTools => field ??= new Target(description: "Restores dotnet tools")
-        // Don't show the target in the CLI
-        .Unlisted()
-        .Executes("dotnet tool restore --verbosity minimal");
-
-    private ITarget Cleanup => field ??= new Target(description: "Cleans up code")
-        .TriggersAfter(RestoreDotnetTools)
-        .Executes($"dotnet jb cleanupcode {BuildTargets.SolutionPath}");
-
-    private ITarget Inspect => field ??= new Target(description: "Inspects code")
-        .TriggersAfter(RestoreDotnetTools)
-        .After(Cleanup)
-        // Targets support delegate execution with dependency injection
-        .Executes(async (Shell shell) =>
-        {
-            var logger = loggerFactory.CreateLogger(nameof(Inspect));
-            
-            // Run shell executions in targets
-            var logContents = await shell
-                .Execute($"dotnet jb inspectcode {BuildTargets.SolutionPath} -stdout")
-                .ToArrayAsync()
-                .LetAsync(lines => lines.StringJoin(Environment.NewLine));
-            
-            // Sarif format serialization provided separately by Sarif.Sdk
-            var settings = new JsonSerializerSettings()
-            {
-                ContractResolver = SarifContractResolverVersionOne.Instance
-            };
-
-            var log = JsonConvert.DeserializeObject<SarifLog>(logContents, settings);
-            var results = log?.Runs
-                .SelectMany(r => r.Results)
-                .ToArray() ?? [];
-            
-            logger.LogInformation(
-                "Inspect Results: {Warnings} Warnings {Errors} Errors",
-                results.Count(r => r.Level == FailureLevel.Warning),
-                results.Count(r => r.Level == FailureLevel.Error)
-            );
-        });
+        .DependsOn(Build, Test);
 }
 ```
+
 Program.cs:
-```csharp
-// Initialise the build with cli args and the target working directory, relative to folder containing .git
-await new TacticalNukeBuild(args, workingDirectory: "src")
-    .AddGitLab() // Gitlab Specific Extensions
-    // Add target classes to make their targets and CLI options available
-    .AddTargets<BuildTargets>()
-    .AddTargets<InspectionTargets>()
-    // Execute
-    .ExecuteAsync();
-```
-
-Then run!:
-
-```shell
-dotnet run --project _build/_build.csproj -- {args}
-
-Description:
-  TACTICAL NUKE INCOMING - Announcer, 2009
-  
-  Targets:
-    Build : Builds the solution
-    Test : Tests the solution
-    MergeCheck : Runs required merge checks -> [Build, Test]
-    Cleanup : Cleans up code -> [RestoreDotnetTools]
-    Inspect : Inspects code -> [RestoreDotnetTools]
-
-Usage:
-  _build [<targets>...] [options]
-
-Arguments:
-  <targets>  Targets to run in the build
-
-Options:
-  -s, --skip <skip>                      Targets to skip in the build
-  --dotnet-verbosity <dotnet-verbosity>  Verbosity for dotnet tasks
-  -?, -h, --help                         Show help and usage information
-  --version                              Show version information
-```
-
-## Features
-
-### Target Graph Execution
-
-### CLI Parameters with System.CommandLine
-
-### Simplified Shell Execution
-
-### 
-
-### Extension
-
-#### Dependency Injection
-
-The execution engine uses dependency injection, which can be used to extend the function of the system. Injected
-services can be resolved in class constructors, and by target delegates. Targets and build option classes must be
-registered as singletons. A scope is created per target execution. 
 
 ```csharp
-// Program.cs
-var build = new TacticalNukeBuild("src")
-    .AddTargets<MyTargets>;
-build.Services.AddSingleton<IMySingleton, MySingleton>();
-build.Services.AddSingleton<IMyScoped, MyScoped>();
-await build.ExecuteAsync(args);
-
-// MyTargets.cs
-public class MyTargets(IMySingleton singleton) : IBuildTargets
-{
-    public ITarget Target => field ??= new Target()
-        .Executes((IMyScoped scoped) => {})
-}
-```
-
-#### Logging
-A basic `ILoggerFactory` implementation is provided built in, but this can be overriden using dependency injection.
-
-```csharp
-// SerilogExtensions.cs
-public static class SerilogExtensions
-{
-    extension(TacticalNukeBuild build)
-    {
-        public TacticalNukeBuild AddSerilog()
-        {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .Enrich.FromLogContext()
-                .MinimumLevel.Verbose()
-                .CreateLogger();
-
-            build.Services.AddLogging(b => b
-                .ClearProviders()
-                .AddSerilog(Log.Logger));
-
-            return build;
-        }
-    }
-}
-
-// Program.cs
-await new TacticalNukeBuild("src")
+await new Build(workingDirectory: "src")
+    .AddShell()
     .AddSerilog()
-    .AddTargets<MyTargets>()
+    .AddTargetsFromEntryAssembly()
     .ExecuteAsync(args);
 ```
 
-#### Target Implementation
+Then run! No further setup required:
 
-Targets may be extended. Any class implementing `ITarget` may be used. 
-All built in extension methods target `T where T : ITarget`
-
-```csharp
-// MyTarget.cs
-/// Automatically implements a delegate setting "Executed" to true
-public class MyTarget : Target 
-{
-    public bool Executed { get; }
-    
-    public MyTarget([CallerMemberName] string name = "") : base(name)
-    {
-        Executes(() => Executed = true);
-    }
-}
-
-// MyBuildTargets.cs
-public class MyTargets : IBuildTargets
-{
-    public MyTarget Target => field ??= new MyTarget();
-}
-```
-
-## Porting from NUKE Build
-
-Tactical NUKE doesn't offer complete coverage of NUKE APIs by design and makes no commitment to support them. 
-However, most pipelines can be bridged to without requiring complete rewrites and some extension methods are provided 
-to assist in bridging the gap: 
-
-Add the NukeCommon extension package to the build:
 ```shell
-dotnet add package TacticalBuild.NukeCommon
-```
-```xml
-<PackageReference Include="TacticalBuild.NukeCommon" Version="X.Y.Z"/>
+dotnet run --project build/build.csproj -- {args}
 ```
 
-Targets can be copied near verbatim with minor adjustments, and nuke common tools can be used as normal:
+## Features Summary
+
+1. Fluent, flexible and low ceremony target definition and execution engine
+1. First class dependency injection support
+1. Straightforward calling of CLI tools with `Shell` extension
+1. Dry run capability
+1. Fully inspectable target DAG, powered by [QuikGraph](https://github.com/KeRNeLith/QuikGraph)
+1. Result passing between targets
+1. High extensibility
+1. Maintainable low footprint (< 3000 cloc)
+
+## Core Concepts
+
+xBuild core contains the bare minimum code required to construct and execute a target graph. The core is
+then extended to provide additional functionality.
+
+### Build Construction
+
+xBuild builds are created through the `Build` class, which is a thin wrapper around a
+`Microsoft.Extensions.DependencyInjection` DI container which is used for initialization of services
+required by the build:
 
 ```csharp
-ITarget ToolRestore => field ??= new Target()
-    ...
-    .Executes((BuildContext context) => DotNetTasks.DotNetToolRestore(s => s
-        .Configure(context)
-    ));
+await new Build(workingDirectory: "src")
+    .AddShell() // Adds depdendencies required for shell execution 
+    .AddSerilog() // Adds a serilog backed logging implemenation
+    .AddTargetsFromEntryAssembly() // Add target classes implemented
+    ... // Add other serivices and extensions
+    .ExecuteAsync(args); // Run the build 
 ```
+
+A single `ServiceProvider` is initialized and used during the build. A scope is created for each target when
+executed.
+
+### Build Initialization
+
+When the build is executed, the following initialization actions are taken:
+
+1. Environment variables are loaded from any .env file found in the directory path to the build executable
+2. The process working directory is changed to the parent directory containing .git
+3. An instance of `BuildOptions` implementing `IOptionProvider` is registered as a singleton. Build options specifies
+   the following options which are supplied to the build execution:
+    1. **Targets**: Targets to run
+    2. **Exclude**: Targets to exclude
+    3. **Skipped**: Targets to skip
+    4. **BuildConcurrency**: The concurrency to use for target execution
+4. An instance of `IBuildContext` is registered as a singleton, which holds information about the build, including the
+   `TargetGraph`.
+
+### Targets
+
+Build targets are executable units of functionality that can be invoked, and can express dependencies and execution
+ordering relative to each other. Targets are collected by the build from any service implementing `ITargetProvider` and
+used to build a `TargetGraph` instance, which contain Directed Acyclic Graphs modeling the targets dependencies and
+execution ordering. The build will check for cycles in execution ordering and throw if they exist. Targets are executed
+in the order that they are invoked, and then according to the resulting graph topology.
+
+**Excluded** targets are not included as options in the build when constructing the final build graph. As such their
+relationships with other targets are also ignored.
+
+**Skipped** targets are included in the build as normal if invoked, but their executions are not run.
+
+If the **BuildConcurrency** is set to `Sequential`, targets are run one at a time. In the absence of
+clear target ordering, order of execution is arbitrary. If it is `Parallel`, targets are run concurrently except when
+there is an explicit execution order specified.
+
+An example of the options available when declaring targets:
+
+```csharp
+// Target classes support dependency injection
+public class MyTargets(IMySingleton singleton) : ITargetProvider
+{
+    // Targets are best specified as lazy loaded properties
+    public ITarget One => field ??= new Target(description: "Some target")
+        .Executes((IMyScoped scoped) => 
+        {
+            // This action will be run when the target is run, supports dependency injection
+        });
     
-## Goals
+    public ITarget Two => field ??= new Target(description: "Some other action")
+        .DependsOn(() => One) // causes the specified target to be triggered by this target is, and run before
+        .Executes(async () => 
+        {
+             // Executions can be asynchronous
+        });
+    
+    public ITarget Three => field ??= new Target()
+        .After(() => One) // ensures this target is run after the specified target
+        .Before(() => Two) // ensures this target is run before the specified target 
+        .Executes(async (IMyScoped scoped) => 
+        {
+             // Do something asynchronously
+        });
+        .Executes(() => 
+        {
+            // A target can have multiple executions that are always run consecutively
+        });
+    
+    public ITarget Four => field ??= new Target()
+        .DependentFor(() => Three) // this target is triggered by and run before the specified target
+        .Executes(() => 
+        {
+            // Tasks can return data, which becomes available to subsequent target executions
+            return new [] {"Task Result Data"};
+        });
+    
+    public ITarget Five => field ??= new Target()
+        .DependsOn(() => Four) 
+        .ProceedAfterFailure() // The build should continue to run if this target fails
+        .Executes((ITargetLogger logger, string[] results) => 
+        {
+            logger.LogInformationFormat(results.First());
+            throw new Exception(); // Targets only fail if they throw an exception
+        });
+}
+```
 
-### C# Build Engine
-NUKE's C# first target execution engine permits the power and rich ecosystem to be leveraged directly 
-for build automation unlike *AKE-like build systems. Tactical NUKE preserves this design goal and functionality.
-
-### Sustainable Architecture
-Tactical NUKE aims to ensure long-term maintainability, and in order to ensure this some initial directions 
-have been taken:
-
-#### Extensibility Over Integration
-
-At it's core, Tactical NUKE aims to be an extensible execution engine instead of a bundle of functionality. 
-No _specific_ support for any tooling is provided in core packages, although integration extensions for 
-common tools may be included as non-core packages in this repository. On the other hand, _almost_ every 
-aspect of the core should be extendable. 
-
-#### CLI Tool Invocation
-
-Tactical NUKE will **not** attempt to provide CLI bindings for tools. While this approach can improve tool
-discoverability, the amount of code required to effectively wrap all possible CLIs can easily become 
-unmanageable, and it affects portability with simple scripting and other build systems. 
-
-Instead, **seamless, bash like command invocation** is implemented as an alternative:
+Target providers can be added to the build like so:
 
 ```csharp
-ITarget Target => field ??= new Target()
-    .Executes("ENV1=val1 ENV2=val2 tool --with-args");
+await new Build(workingDirectory: "src")
+    .AddTargets<MyTargets>()
+    .ExecuteAsync(args); 
 ```
+
+When target providers are registered, they can be resolved via dependency injection, and referred to by other
+targets providers like so:
+
+```csharp
+public class OtherTargets(MyTargets targets) : ITargetProvider
+{
+    public ITarget Six => field ??= new Target()
+        .DependsOn(() => targets.One);
+}
+```
+
+### Options
+
+xBuild provides expanded support for custom CLI and Environment variable options using `System.CommandLine`.
+
+`BuildOption` represents a variable that is usable in the pipeline that can be set through the command line or
+through environment variables, with a default value in case neither is specified. `BuildOption` names are inferred
+from the their property name, but can also be constructed manually. `BuildOption`s can be marked a sensitive, and it's
+expected that extensions never leak those values.
+
+`BuildOption` instances can be specified as properties of classes implementing `IOptionsProvider`
+(or `ITargetProvider`) like so:
+
+```csharp
+public class MyOptions : IOptionsProvider
+{
+    // Settable as --verbosity on the CLI or VERBOSITY as an environment variable
+    public BuildOption<string> SolutionPath => field ??= new("solution.sln", description: "Path to the solution");
+}
+
+// Also supported in ITargetProvider implementations
+public class MyTargets(MyOptions options) : ITargetProvider
+{
+    BuildOption<string> Verbosity => field ??= new("minimal", description: "Some build option");
+    
+    private ITarget Build => field ??= new Target(description: "Builds the solution")
+        .Executes($"dotnet build {options.SolutionPath} --verbosity {Verbosity}");
+}
+```
+
+### Lifetime Event Handlers
+
+Services registered as the following interfaces are resolved by the build and executed at different stages in the
+build execution:
+
+`IBuildInitializedHandler`: When the build has been initialised, before targets have been executed
+
+`ITargetStartedHandler`: Before a target is executed by the build
+
+`ITargetCompletedHandler`: After a target is executed by the build
+
+`IBuildCompletedHandler`: When the build has completed, after all targets have run
+
+### Build Execution
+
+Once the build has been constructed and initialised and all targets, options and handlers have been collected, each
+invoked target and other triggered targets (not including excluded targets) are executed in the order expressed, and
+according to the specified **BuildConcurrency**. If target ordering is not expressed, execution ordering is not
+guaranteed, but will be deterministic.
+
+If a target throws an exception, the build `Status` is set to `Failed`. By default, downstream targets are aborted
+when a target fails. This behaviour can be controlled using the target's`DownstreamFailureMode` and
+`UpstreamFailureMode` options.
+
+Target execution builder methods also add string representations about what they run where feasible. The dry run
+extension allows for these to be logged instead of targets being run when the `--dry-run` option is specified.
+
+## Extensions
+
+| Extension                                                                  | Description                                                       |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------|
+| [xBuild.Shell](./src/xBuild.Shell/README.md)                               | Extensions executing cli tools and shell commands                 |
+| [xBuild.Serilog](./src/xBuild.Serilog/README.md)                           | Serilog logging implemenetation                                   |
+| [xBuild.Polly](./src/xBuild.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies |
+| [xBuild.DesktopNotifications](./src/xBuild.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events         |
+| [xBuild.UserInput](./src/xBuild.UserInput/README.md)                       | Extensions allowing user input during builds                      |
+| [xBuild.Apt](./src/xBuild.Apt/README.md)                                   | Extensions for interacting with apt packages                      |
+
+## Miscellaneous
+
+### Where's the CLI wrappers?
+
+CLIs are broad and varied in their form and function, and are prone to change. While there is some advantage to
+wrapping these in strongly defined code as some other build systems attempt to do, the amount of code required to
+properly capture this can quickly get out of hand. `xBuild` was built to be flexible and low ceremony, and `xBuild.Shell`
+reflects this philosophy by providing first class support for CLI command construction and execution that can be 
+copied straight to/from a script or YAML file, while refraining from trying to cater to any specific CLI tool. 
