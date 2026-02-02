@@ -1,0 +1,14 @@
+using System.CommandLine;
+
+namespace Jig.Options;
+
+public interface IBuildOption
+{
+    object? RawValue { get; }
+    
+    bool Sensitive { get; }
+    
+    Option Option { get; }
+
+    void Set(ParseResult parseResult);
+}

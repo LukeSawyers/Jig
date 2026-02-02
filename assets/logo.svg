@@ -1,25 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="xBuild terminal icon v2">
-  <defs>
-    <style>
-      .bg { fill: #0B1220; }      /* deep terminal */
-      .fg { fill: #E5E7EB; }      /* gray-200 */
-      .accent { fill: #22C55E; }  /* green */
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-weight: 800; }
-    </style>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Jig logo">
+  <rect width="512" height="512" fill="none"/>
 
-  <!-- Background (kept) -->
-  <rect class="bg" x="48" y="48" width="416" height="416" rx="92"/>
+  <!-- rounded-square background (replaces hex) -->
+  <rect 
+          x="0" y="0"
+          width="512" height="512" 
+          rx="100" 
+          fill="#060E09" 
+          />
 
-  <!-- Prompt dot (moved up/left, slightly larger) -->
-  <circle class="accent" cx="130" cy="125" r="25"/>
+  <!-- J -->
+  <text x="75" y="440"
+        font-family="Orbitron"
+        font-size="500"
+        font-weight="800"
+        fill="#ffffff"
+        letter-spacing="1"
+  >J</text>
 
-  <!-- x (smaller) -->
-  <text class="mono fg" x="196" y="324" font-size="180" text-anchor="middle">x</text>
-
-  <!-- B (bigger) -->
-  <text class="mono fg" x="318" y="324" font-size="232" text-anchor="middle">B</text>
-
-  <!-- Cursor underscore (wider, closer to glyphs) -->
-  <rect class="accent" x="260" y="380" width="150" height="25" rx="15"/>
+  <!-- nodes (accent) -->
+  <circle cx="110" cy="140" r="35" fill="#00A17E"/>
+  <circle cx="170" cy="260" r="35" fill="#00A17E"/>
+  <circle cx="260" cy="70" r="35" fill="#00A17E"/>
+  <path d="M 110 140 L 170 260" stroke="#00A17E" stroke-width="30" stroke-linecap="round"/>
+  <path d="M 110 140 L 260 70" stroke="#00A17E" stroke-width="30" stroke-linecap="round"/>
 </svg>

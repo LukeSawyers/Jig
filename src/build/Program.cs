@@ -1,9 +1,9 @@
 ﻿using build.Targets;
-using xBuild.Build;
-using xBuild.DesktopNotifications;
-using xBuild.Serilog;
-using xBuild.Shell;
-using xBuild.UserInput;
+using Jig.Build;
+using Jig.DesktopNotifications;
+using Jig.Serilog;
+using Jig.Shell;
+using Jig.UserInput;
 
 var arguments = new[]
 {

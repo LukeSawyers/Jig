@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Jig extension implementating adding Polly resilience for targets.
+        </Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Polly" Version="8.6.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Jig\Jig.csproj" />
+    </ItemGroup>
+
+</Project>

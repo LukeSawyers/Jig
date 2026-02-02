@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Jig extension adding shell execution capability for targets.
+        </Description>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="CliWrap" Version="3.10.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Jig\Jig.csproj" />
+    </ItemGroup>
+</Project>

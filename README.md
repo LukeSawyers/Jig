@@ -20,29 +20,29 @@ dotnet new console -n build
 Add the package:
 
 ```shell
-dotnet add package xBuild
-dotnet add package xBuild.Shell
-dotnet add package xBuild.Serilog
+dotnet add package Jig
+dotnet add package Jig.Shell
+dotnet add package Jig.Serilog
 ```
 
 ```xml
 
-<PackageReference Include="xBuild" Version="X.Y.Z"/>
-<PackageReference Include="xBuild.Shell" Version="X.Y.Z"/>
-<PackageReference Include="xBuild.Serilog" Version="X.Y.Z"/>
+<PackageReference Include="Jig" Version="X.Y.Z"/>
+<PackageReference Include="Jig.Shell" Version="X.Y.Z"/>
+<PackageReference Include="Jig.Serilog" Version="X.Y.Z"/>
 ```
 
 Add Targets:
 
 ```csharp
 using System.CommandLine;
-using TacticalNuke.Targets;
+using Jig.Targets;
 
 namespace _build.Targets;
 
 public class Targets : IBuildTargets 
 {
-    public const string SolutionPath = "xBuild.sln";
+    public const string SolutionPath = "Jig.sln";
 
     BuildOption<string> Verbosity { get; } = new("minimal", description: "Verbosity for dotnet tasks" );
 
@@ -87,12 +87,12 @@ dotnet run --project build/build.csproj -- {args}
 
 ## Core Concepts
 
-xBuild core contains the bare minimum code required to construct and execute a target graph. The core is
+Jig core contains the bare minimum code required to construct and execute a target graph. The core is
 then extended to provide additional functionality.
 
 ### Build Construction
 
-xBuild builds are created through the `Build` class, which is a thin wrapper around a
+Jig builds are created through the `Build` class, which is a thin wrapper around a
 `Microsoft.Extensions.DependencyInjection` DI container which is used for initialization of services
 required by the build:
 
@@ -212,7 +212,7 @@ public class OtherTargets(MyTargets targets) : ITargetProvider
 
 ### Options
 
-xBuild provides expanded support for custom CLI and Environment variable options using `System.CommandLine`.
+Jig provides expanded support for custom CLI and Environment variable options using `System.CommandLine`.
 
 `BuildOption` represents a variable that is usable in the pipeline that can be set through the command line or
 through environment variables, with a default value in case neither is specified. `BuildOption` names are inferred
@@ -270,12 +270,12 @@ extension allows for these to be logged instead of targets being run when the `-
 
 | Extension                                                                  | Description                                                       |
 |----------------------------------------------------------------------------|-------------------------------------------------------------------|
-| [xBuild.Shell](./src/xBuild.Shell/README.md)                               | Extensions executing cli tools and shell commands                 |
-| [xBuild.Serilog](./src/xBuild.Serilog/README.md)                           | Serilog logging implemenetation                                   |
-| [xBuild.Polly](./src/xBuild.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies |
-| [xBuild.DesktopNotifications](./src/xBuild.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events         |
-| [xBuild.UserInput](./src/xBuild.UserInput/README.md)                       | Extensions allowing user input during builds                      |
-| [xBuild.Apt](./src/xBuild.Apt/README.md)                                   | Extensions for interacting with apt packages                      |
+| [Jig.Shell](./src/Jig.Shell/README.md)                               | Extensions executing cli tools and shell commands                 |
+| [Jig.Serilog](./src/Jig.Serilog/README.md)                           | Serilog logging implemenetation                                   |
+| [Jig.Polly](./src/Jig.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies |
+| [Jig.DesktopNotifications](./src/Jig.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events         |
+| [Jig.UserInput](./src/Jig.UserInput/README.md)                       | Extensions allowing user input during builds                      |
+| [Jig.Apt](./src/Jig.Apt/README.md)                                   | Extensions for interacting with apt packages                      |
 
 ## Miscellaneous
 
@@ -283,6 +283,6 @@ extension allows for these to be logged instead of targets being run when the `-
 
 CLIs are broad and varied in their form and function, and are prone to change. While there is some advantage to
 wrapping these in strongly defined code as some other build systems attempt to do, the amount of code required to
-properly capture this can quickly get out of hand. `xBuild` was built to be flexible and low ceremony, and `xBuild.Shell`
+properly capture this can quickly get out of hand. `Jig` was built to be flexible and low ceremony, and `Jig.Shell`
 reflects this philosophy by providing first class support for CLI command construction and execution that can be 
 copied straight to/from a script or YAML file, while refraining from trying to cater to any specific CLI tool. 

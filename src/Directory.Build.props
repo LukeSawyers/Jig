@@ -11,9 +11,12 @@
         <!-- Package Metadata -->
         <Version>0.2.0</Version>
         <PackageIcon>logo-128.png</PackageIcon>
-        <Authors>xBuild Maintainers</Authors>
+        <Authors>Jig Maintainers</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <!-- Source repository -->
+        <RepositoryUrl>https://github.com/LukeSawyers/Jig</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
 
         <!-- TODO       <RepositoryUrl></RepositoryUrl>-->
 

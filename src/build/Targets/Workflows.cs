@@ -1,4 +1,4 @@
-using xBuild.Targets;
+using Jig.Targets;
 
 namespace build.Targets;
 

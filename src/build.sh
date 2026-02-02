@@ -1,2 +1,2 @@
 #!/bin/bash
-dotnet run --verbosity q --project _build/_build.csproj  -- "$@"
+dotnet run --verbosity q --project build/build.csproj  -- "$@"

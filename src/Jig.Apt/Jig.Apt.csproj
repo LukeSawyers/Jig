@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Jig extension adding apt package utilities for targets
+        </Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Jig.UserInput\Jig.UserInput.csproj" />
+        <ProjectReference Include="..\Jig.Shell\Jig.Shell.csproj" />
+        <ProjectReference Include="..\Jig\Jig.csproj" />
+    </ItemGroup>
+
+</Project>

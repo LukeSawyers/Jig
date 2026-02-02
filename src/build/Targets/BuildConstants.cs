@@ -4,7 +4,7 @@ namespace build.Targets;
 
 public class BuildConstants
 {
-    public const string SolutionPath = "xBuild.sln";
+    public const string SolutionPath = "Jig.sln";
 
     public static SolutionFile Solution =>
         field ??= SolutionFile.Parse(Path.Combine(Directory.GetCurrentDirectory(), SolutionPath));

@@ -8,10 +8,10 @@ using Microsoft.CodeAnalysis.Sarif.Readers;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Newtonsoft.Json;
-using xBuild.Apt;
-using xBuild.Lang;
-using xBuild.Shell;
-using xBuild.Targets;
+using Jig.Apt;
+using Jig.Lang;
+using Jig.Shell;
+using Jig.Targets;
 
 namespace build.Targets;
 

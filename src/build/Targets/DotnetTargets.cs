@@ -1,11 +1,11 @@
 using AwesomeAssertions;
+using Jig.Options;
+using Jig.Polly;
+using Jig.Shell;
+using Jig.Targets;
 using MoreLinq;
 using Polly;
 using Polly.Retry;
-using xBuild.Options;
-using xBuild.Polly;
-using xBuild.Shell;
-using xBuild.Targets;
 
 namespace build.Targets;
 
@@ -31,7 +31,7 @@ public class DotnetTargets : ITargetProvider
     public ITarget ClearNugetPackages => field ??= new Target(description: "Clears nuget packages from the directory")
         .Before(() => Build)
         .ExecutesExpression(() => new DirectoryInfo(Directory.GetCurrentDirectory())
-            .GetFiles("xBuild*.nupkg", SearchOption.AllDirectories)
+            .GetFiles("Jig*.nupkg", SearchOption.AllDirectories)
             .ForEach(f => f.Delete()));
     
     public ITarget Pack => field ??= new Target(description: "Generates nuget packages")
@@ -45,7 +45,7 @@ public class DotnetTargets : ITargetProvider
         .ExecutesExpression(() => NugetApiKey.Value.Should().NotBeNull())
         .ExecutesDefaultShell(
             $"""
-             dotnet nuget push **/xBuild*.nupkg 
+             dotnet nuget push **/Jig*.nupkg 
              --api-key {NugetApiKey} 
              --skip-duplicate 
              --source https://api.nuget.org/v3/index.json
