@@ -10,15 +10,15 @@ var arguments = new[]
     // nameof(DotnetTargets.Build),
     // nameof(DotnetTargets.Test),
     // nameof(DotnetTargets.ClearNugetPackages),
-    // nameof(DotnetTargets.NugetPush),
+    nameof(DotnetTargets.NugetPush),
     // nameof(DotnetTargets.Pack),
     // nameof(StaticAnalysisTargets.Inspect),
     // nameof(StaticAnalysisTargets.ValidateLicenses),
     // nameof(StaticAnalysisTargets.PackageDescriptionCheck),
     // nameof(StaticAnalysisTargets.CountLines),
-    nameof(Workflows.MergeCheck),
+    // nameof(Workflows.MergeCheck),
     // "--dry-run",
-    "--plan",
+    // "--plan",
     // "--list",
     // "--help"
 };

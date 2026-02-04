@@ -24,10 +24,11 @@ public static class ShellExtensions
         )
         {
             var description = command.ToDotnetToolCommand().Sanitize().Concat($" : {typeof(TOutput).Name}");
-                
+
             return target.Executes(async (Shell shell, CancellationToken stoppingToken) => await shell
                     .DotnetToolCommand(command, validation, logging)
-                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(), stoppingToken),
+                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(),
+                        stoppingToken),
                 description
             );
         }
@@ -263,7 +264,8 @@ public static class ShellExtensions
         {
             const string redactedString = "[REDACTED]";
             var format = command.Format;
-            var arguments = command.GetArguments();
+            var arguments = new object?[command.ArgumentCount];
+            command.GetArguments().CopyTo(arguments);
             for (var i = 0; i < arguments.LongLength; i++)
             {
                 var argument = arguments[i];
@@ -289,7 +291,7 @@ public static class ShellExtensions
                 .Concat(arguments)
                 .Append(Directory.GetCurrentDirectory())
                 .ToArray();
-            
+
             return FormattableStringFactory.Create(format, arguments);
         }
 
