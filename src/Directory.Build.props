@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <IsPackable>true</IsPackable>
+        <IsTestProject>false</IsTestProject>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
@@ -29,12 +30,6 @@
         <!-- This is a bugged nullability warning in .NET 10 -->
         <NoWarn>CS8620</NoWarn>
     </PropertyGroup>
-
-    <ItemGroup Condition="$(IsPackable)">
-        <None Include="README.md" Pack="true" PackagePath="\"/>
-        <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\"/>
-        <None Include="..\..\assets/logo-128.png" Pack="true" PackagePath="\"/>
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Tetractic.CodeAnalysis.ExceptionAnalyzers" Version="1.4.8">

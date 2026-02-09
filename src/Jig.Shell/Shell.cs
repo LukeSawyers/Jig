@@ -9,6 +9,8 @@ public class Shell(ILogger<Shell> logger)
     ///     Build a command from the supplied string
     /// </summary>
     /// <param name="command">The command to execute</param>
+    /// <param name="validation">Command result validation option to use. default: <see cref="CommandResultValidation.ZeroExitCode"/> </param>
+    /// <param name="logging">Logging options to use. default: All</param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
     public Command Command(
@@ -18,7 +20,7 @@ public class Shell(ILogger<Shell> logger)
     )
     {
         command = command.Sanitize();
-        var redacted = command.Redact();
+        var redacted = command.Redact().ToPrintableCommandString();
         logger.LogInformation(redacted.Format, redacted.GetArguments());
 
         var shellCommand = ShellCommand.Parse(command.ToString());

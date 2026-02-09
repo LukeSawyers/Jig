@@ -43,12 +43,6 @@ public class BuildRunnerTests(ITestOutputHelper outputHelper)
         target.Executed.Should().BeFalse();
         BuildContext.TargetResults.Should().NotContainKey(target);
     }
-
-    [Fact]
-    public void METHOD()
-    {
-        throw new Exception();
-    }
     
     [Fact]
     public async Task RunsAllSpecifiedTargets()
