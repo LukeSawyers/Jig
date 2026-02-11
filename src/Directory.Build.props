@@ -30,7 +30,7 @@
         <!-- This is a bugged nullability warning in .NET 10 -->
         <NoWarn>CS8620</NoWarn>
     </PropertyGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="Tetractic.CodeAnalysis.ExceptionAnalyzers" Version="1.4.8">
             <PrivateAssets>all</PrivateAssets>

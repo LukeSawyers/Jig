@@ -3,6 +3,8 @@
 An extensibility-first, low ceremony, C# task-based build automation system. Originally inspired
 by [NUKE Build](https://github.com/nuke-build/nuke).
 
+> ***jig** (tool): a type of custom made tool used to control the location and motion of other parts or tools*
+
 ## Getting Started
 
 Ensure your project is within a git repository:
@@ -26,7 +28,6 @@ dotnet add package Jig.Serilog
 ```
 
 ```xml
-
 <PackageReference Include="Jig" Version="X.Y.Z"/>
 <PackageReference Include="Jig.Shell" Version="X.Y.Z"/>
 <PackageReference Include="Jig.Serilog" Version="X.Y.Z"/>
@@ -268,14 +269,25 @@ extension allows for these to be logged instead of targets being run when the `-
 
 ## Extensions
 
-| Extension                                                                  | Description                                                       |
-|----------------------------------------------------------------------------|-------------------------------------------------------------------|
+| Extension                                                            | Description                                                       |
+|----------------------------------------------------------------------|-------------------------------------------------------------------|
 | [Jig.Shell](./src/Jig.Shell/README.md)                               | Extensions executing cli tools and shell commands                 |
 | [Jig.Serilog](./src/Jig.Serilog/README.md)                           | Serilog logging implemenetation                                   |
 | [Jig.Polly](./src/Jig.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies |
 | [Jig.DesktopNotifications](./src/Jig.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events         |
 | [Jig.UserInput](./src/Jig.UserInput/README.md)                       | Extensions allowing user input during builds                      |
 | [Jig.Apt](./src/Jig.Apt/README.md)                                   | Extensions for interacting with apt packages                      |
+
+## Acknowledgements
+
+Made possible by:
+
+- [DotNetEnv](https://github.com/tonerdo/dotnet-env)
+- [Humanizer](https://github.com/Humanizr/Humanizer)
+- [JetBrains](https://github.com/JetBrains/JetBrains.Annotations)
+- [Microsoft.Extensions](https://github.com/dotnet/extensions)
+- [NeoSmart](https://github.com/neosmart/AsyncLock)
+- [QuikGraph](https://github.com/KeRNeLith/QuikGraph)
 
 ## Miscellaneous
 

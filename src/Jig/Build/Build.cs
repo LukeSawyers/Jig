@@ -1,5 +1,8 @@
-﻿using DotNetEnv;
+﻿using System.IO.Abstractions;
+using DotNetEnv;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Jig.Build;
 
@@ -38,16 +41,19 @@ public class Build : IBuild
 
             rootDirectory = rootDirectory.Parent;
         }
-
-        rootDirectory = new DirectoryInfo(Path.Combine(rootDirectory.FullName, workingDirectory));
-
-        Directory.SetCurrentDirectory(rootDirectory.FullName);
-
+        
+        var repositoryRootDirectory = rootDirectory.FullName;
+        Directory.SetCurrentDirectory(Path.Combine(repositoryRootDirectory, workingDirectory));
+        IBuildContext.RepositoryRootDirectory = repositoryRootDirectory;
         var buildContext = new BuildContext();
+        
         Console.CancelKeyPress += (_, _) => buildContext.Cancel();
 
         _services.AddSingleton(buildContext);
         _services.AddSingleton<IBuildContext>(s => s.GetRequiredService<BuildContext>());
+        
+        // File system
+        _services.AddSingleton<IFileSystem, FileSystem>();
 
         // Add Build Options
         this.AddBuildOptions(new BuildOptions(defaultBuildConcurrency));

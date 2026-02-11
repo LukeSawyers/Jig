@@ -16,4 +16,7 @@ ITarget Target => field ??= new Target()
         .AddTimeout(TimeSpan.FromSeconds(30))
     )
 ```
- 
+
+## Acknowledgements
+
+Made possible by [Polly](https://github.com/App-vNext/Polly)

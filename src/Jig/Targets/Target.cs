@@ -10,7 +10,7 @@ public class Target(
 ) : ITarget
 {
     /// <inheritdoc />
-    public string Name { get; } = name;
+    public string Name { get; set; } = name;
     
     /// <inheritdoc />
     public string Description { get; } = description;

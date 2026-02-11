@@ -1,13 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Description>Tests</Description>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
-
-    <ItemGroup>
-        <Using Include="Xunit"/>
-    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Jig\Jig.csproj" />

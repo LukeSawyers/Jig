@@ -11,3 +11,7 @@ Extends Jig.Core to allow target executions to be wrapped with Polly resilience 
 
 Call `.AddSerilog(config => {})` when constructing the build to add the logger implementation. A default console
 configuration is provided, but this can be overridden by supplying a lambda to the function call.
+
+## Acknowledgements
+
+Made possible by [Serilog](https://github.com/serilog/serilog)

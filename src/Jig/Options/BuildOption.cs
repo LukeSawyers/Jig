@@ -41,13 +41,11 @@ public class BuildOption<T>(
     
     /// <inheritdoc/>
     public bool Sensitive { get; init; } = sensitive; 
-
-    public Option<T> Option { get; } = option;
-
+    
     /// <inheritdoc/>
-    Option IBuildOption.Option => Option;
+    public Option Option => option;
 
-    private string EnvName => Option.Name.Trim('-').Underscore().ToUpperInvariant();
+    private string EnvName => option.Name.Trim('-').Underscore().ToUpperInvariant();
     
     /// <inheritdoc/>
     public void Set(ParseResult parseResult)
@@ -56,9 +54,9 @@ public class BuildOption<T>(
         var cliSpecified = parseResult
             .Tokens
             .Select(t => t.Value)
-            .Contains(Option.Name);
+            .Contains(option.Name);
 
-        var cliValue = parseResult.GetValue(Option);
+        var cliValue = parseResult.GetValue(option);
         
         if (cliSpecified && cliValue is not null)
         {

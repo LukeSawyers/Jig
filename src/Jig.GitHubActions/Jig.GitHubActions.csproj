@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Jig extension adding utilities for github actions
+        </Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Jig\Jig.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="GitHubActionsDotNet" Version="1.5.3" />
+    </ItemGroup>
+
+
+</Project>

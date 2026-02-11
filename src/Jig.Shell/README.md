@@ -93,4 +93,11 @@ ITarget Target => field ??= new Target()
 
 // > dotnet nuget push --api_key [REDACTED]
 ```
+
+## Acknowledgements
+
+Made trivial by:
+
+- [CliWrap](https://github.com/Tyrrrz/CliWrap)
+- [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)
  

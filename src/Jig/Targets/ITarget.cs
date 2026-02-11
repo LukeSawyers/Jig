@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace Jig.Targets;
 
 /// <summary>
@@ -10,7 +8,7 @@ public interface ITarget
     /// <summary>
     ///     The name of this target
     /// </summary>
-    string Name { get; }
+    string Name { get; set; }
 
     /// <summary>
     ///     Description of this target

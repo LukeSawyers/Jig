@@ -6,18 +6,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Jig.Apt\Jig.Apt.csproj" />
-      <ProjectReference Include="..\Jig.DesktopNotifications\Jig.DesktopNotifications.csproj" />
-      <ProjectReference Include="..\Jig.Polly\Jig.Polly.csproj" />
-<!--      <ProjectReference Include="..\Jig.Spectre\Jig.Spectre.csproj" />-->
-      <ProjectReference Include="..\Jig\Jig.csproj" />
-      <ProjectReference Include="..\Jig.Serilog\Jig.Serilog.csproj" />
+        <ProjectReference Include="..\Jig.Apt\Jig.Apt.csproj"/>
+        <ProjectReference Include="..\Jig.DesktopNotifications\Jig.DesktopNotifications.csproj"/>
+        <ProjectReference Include="..\Jig.GitHubActions\Jig.GitHubActions.csproj"/>
+        <ProjectReference Include="..\Jig.Polly\Jig.Polly.csproj"/>
+
+        <ProjectReference Include="..\Jig\Jig.csproj"/>
+        <ProjectReference Include="..\Jig.Serilog\Jig.Serilog.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
-      <PackageReference Include="Microsoft.Build" Version="18.0.2" />
-      <PackageReference Include="Sarif.Sdk" Version="4.6.0" />
+        <PackageReference Include="AwesomeAssertions" Version="9.3.0"/>
+        <PackageReference Include="Microsoft.Build" Version="18.0.2"/>
+        <PackageReference Include="morelinq" Version="4.4.0"/>
+        <PackageReference Include="Sarif.Sdk" Version="4.6.0"/>
     </ItemGroup>
 
 </Project>

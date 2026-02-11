@@ -4,5 +4,5 @@ public interface IBuildRunner : IAsyncDisposable
 {
     IServiceProvider Services { get; }
 
-    ValueTask<int> ExecuteAsync(string[] args);
+    ValueTask<int> ExecuteAsync(params string[] args);
 }

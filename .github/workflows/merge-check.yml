@@ -1,0 +1,12 @@
+name: merge-check
+on:
+  workflow_dispatch:
+jobs:
+  ubuntu-latest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: 'Execute Targets: MergeCheck'
+      run: dotnet run --project ./src/build/build.csproj -- MergeCheck

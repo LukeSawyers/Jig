@@ -30,3 +30,7 @@ await shell.Command($"sudo apt-get install {package}")
     .WithStandardInputPipe(input.CreateInputPipeSource())
     .ExecuteAsync();
 ````
+
+## Acknowledgements
+
+Made trivial by: [DotNetEnv](https://github.com/Tyrrrz/CliWrap)

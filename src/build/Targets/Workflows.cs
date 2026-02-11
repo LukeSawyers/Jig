@@ -19,6 +19,5 @@ public class Workflows(
         );
 
     public ITarget Deploy => field ?? new Target(description: "Runs actions required to publish artifacts")
-        .DependentOn(() => dotnet.NugetPush
-        );
+        .DependentOn(() => dotnet.NugetPush);
 }
