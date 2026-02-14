@@ -15,7 +15,7 @@ using Jig.Targets;
 
 namespace build.Targets;
 
-public class StaticAnalysisTargets : ITargetProvider
+public class StaticAnalysisTargets(DotnetTargets dotnetTargets) : ITargetProvider
 {
     ITarget Cleanup => field ??= new Target(description: "Cleans up code")
         .ExecutesDotNetTool($"jetbrains.resharper.globaltools cleanupcode {BuildConstants.SolutionPath}");
@@ -28,7 +28,8 @@ public class StaticAnalysisTargets : ITargetProvider
             new JsonSerializerSettings
             {
                 ContractResolver = SarifContractResolverVersionOne.Instance
-            }
+            },
+            logging: ShellLoggingOptions.None
         );
 
     public ITarget Inspect => field ??= new Target(description: "Inspects code for issues")
@@ -46,6 +47,7 @@ public class StaticAnalysisTargets : ITargetProvider
 
     public ITarget CheckLicenses => field ??= new Target(description: "Gets nuget package license validation results")
         .Unlisted()
+        .DependentOn(() => dotnetTargets.Build)
         .ExecutesDotNetToolWithJsonOutput<LicenseValidationResult[]>(
             $"""
              nuget-license -i {BuildConstants.SolutionPath} 
@@ -63,7 +65,7 @@ public class StaticAnalysisTargets : ITargetProvider
         {
             validationResults.Should().NotBeNull()
                 .And.Subject.Should().HaveCountGreaterThan(0, "there should be at least some license validation results");
-                
+
             var errorResults = validationResults
                 .Where(r => r.ValidationErrors is { Count: 0 })
                 .ToArray();
@@ -81,7 +83,7 @@ public class StaticAnalysisTargets : ITargetProvider
                      """
                 )
             ));
-            
+
             errorResults.Should().BeEmpty("there should not be any invalid licenses");
         });
 
@@ -98,8 +100,9 @@ public class StaticAnalysisTargets : ITargetProvider
                 foreach (var project in projects)
                 {
                     var lines = File.ReadAllLines(project);
+                    var testProject = lines.Any(l => l.Contains("<IsTestProject>true"));
                     var notPackable = lines.Any(l => l.Contains("<IsPackable>false"));
-                    if (notPackable)
+                    if (testProject || notPackable)
                     {
                         continue;
                     }
@@ -110,6 +113,9 @@ public class StaticAnalysisTargets : ITargetProvider
             }
         );
     public ITarget CountLines => field ??= new Target(description: "Counts lines of code")
-        .RequireAptPackage("cloc")
-        .Executes($"cloc . --include-lang=C#");
+        .If(OperatingSystem.IsLinux,
+            t => t
+                .RequireAptPackage("cloc", install: true)
+                .Executes($"cloc . --include-lang=C#")
+        );
 }

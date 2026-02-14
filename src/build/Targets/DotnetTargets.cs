@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Jig.Lang;
 using Jig.Options;
 using Jig.Polly;
 using Jig.Shell;
@@ -33,7 +34,7 @@ public class DotnetTargets : ITargetProvider
         .ExecutesExpression(() => new DirectoryInfo(Directory.GetCurrentDirectory())
             .GetFiles("Jig*.nupkg", SearchOption.AllDirectories)
             .ForEach(f => f.Delete()));
-    
+
     public ITarget Pack => field ??= new Target(description: "Generates nuget packages")
         .DependentOn(() => ClearNugetPackages)
         .After(() => Test)
@@ -51,7 +52,7 @@ public class DotnetTargets : ITargetProvider
              --source https://api.nuget.org/v3/index.json
              """
         ).WithResilience(ApplyRetry);
-    
+
     public ResiliencePipelineBuilder ApplyRetry(ResiliencePipelineBuilder b)
         => Retry
             ? b.AddRetry(new RetryStrategyOptions

@@ -19,7 +19,11 @@ public class GitHubWorkflowGenTargets(
         {
             b.on = new()
             {
-                workflow_dispatch = new()
+                workflow_dispatch = new(),
+                pull_request = new()
+                {
+                    branches = ["**"]
+                }
             };
             
             b.jobs = new()
@@ -28,7 +32,19 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.MergeCheck)
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                },
+                {
+                    "windows-latest", new Job()
+                    {
+                        runs_on = "windows-latest"
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                },
+                {
+                    "macos-latest", new Job()
+                    {
+                        runs_on = "macos-latest"
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
                 }
             };
         });
@@ -38,7 +54,11 @@ public class GitHubWorkflowGenTargets(
         {
             b.on = new()
             {
-                workflow_dispatch = new()
+                workflow_dispatch = new(),
+                push = new()
+                {
+                    branches = ["main"]
+                }
             };
             
             b.jobs = new()
@@ -47,7 +67,7 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.Deploy)
+                    }.AddStepsFromTargets(() => workflows.Deploy, "--plan")
                 }
             };
         });

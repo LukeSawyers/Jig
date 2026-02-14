@@ -1,5 +1,8 @@
 name: deploy
 on:
+  push:
+    branches:
+    - main
   workflow_dispatch:
 jobs:
   ubuntu-latest:
@@ -9,4 +12,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: Deploy'
-      run: dotnet run --project ./src/build/build.csproj -- Deploy
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Deploy --plan

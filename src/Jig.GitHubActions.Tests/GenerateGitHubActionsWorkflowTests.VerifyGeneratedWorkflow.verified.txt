@@ -9,4 +9,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: Target'
-      run: dotnet run --project ./src/build/build.csproj -- Target
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Target
