@@ -33,6 +33,12 @@ public class GitHubWorkflowGenTargets(
                     {
                         runs_on = "ubuntu-latest",
                     }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                },
+                {
+                    "windows-latest", new Job()
+                    {
+                        runs_on = "windows-latest"
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
                 }
             };
         });

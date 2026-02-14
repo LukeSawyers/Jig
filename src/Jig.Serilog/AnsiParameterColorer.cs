@@ -31,7 +31,7 @@ public class AnsiParameterColorer(string[] parameterNames) : ILogEventEnricher
         var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(s));
         var hue = BitConverter.ToInt32(hash) % 360;
         hue = hue > 0 ? hue : hue * -1;
-        var color = ColorConverter.HslToRgb(new HSL(hue, 100, 30));
+        var color = ColorConverter.HsvToRgb(new HSV(hue, 100, 70));
         return Color.FromArgb(color.R, color.G, color.B);
     }
 }
