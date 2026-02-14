@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Jig.Lang;
 using Jig.Options;
 using Jig.Polly;
 using Jig.Shell;
@@ -18,8 +19,12 @@ public class DotnetTargets : ITargetProvider
     BuildOption<string?> NugetApiKey { get; } = new(null, sensitive: true, description: "API key used to push nuget packages");
 
     // Build & Test
+    public ITarget Restore => field ??= new Target(description: "Restores the solution")
+        .Executes($"dotnet restore {BuildConstants.SolutionPath} --verbosity {Verbosity}");
+
     public ITarget Build => field ??= new Target(description: "Builds the solution")
         .Executes($"dotnet build {BuildConstants.SolutionPath} --verbosity {Verbosity} --configuration Release")
+        .If(OperatingSystem.IsWindows(), t => t.DependentOn(() => Restore))
         .WithResilience(ApplyRetry);
 
     public ITarget Test => field ??= new Target(description: "Tests the solution")
@@ -33,7 +38,7 @@ public class DotnetTargets : ITargetProvider
         .ExecutesExpression(() => new DirectoryInfo(Directory.GetCurrentDirectory())
             .GetFiles("Jig*.nupkg", SearchOption.AllDirectories)
             .ForEach(f => f.Delete()));
-    
+
     public ITarget Pack => field ??= new Target(description: "Generates nuget packages")
         .DependentOn(() => ClearNugetPackages)
         .After(() => Test)
@@ -51,7 +56,7 @@ public class DotnetTargets : ITargetProvider
              --source https://api.nuget.org/v3/index.json
              """
         ).WithResilience(ApplyRetry);
-    
+
     public ResiliencePipelineBuilder ApplyRetry(ResiliencePipelineBuilder b)
         => Retry
             ? b.AddRetry(new RetryStrategyOptions
