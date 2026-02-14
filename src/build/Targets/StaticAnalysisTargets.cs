@@ -24,7 +24,7 @@ public class StaticAnalysisTargets : ITargetProvider
         .After(() => Cleanup)
         .Unlisted()
         .ExecutesDotNetToolWithJsonOutput<SarifLog>(
-            $"jetbrains.resharper.globaltools inspectcode {BuildConstants.SolutionPath} -stdout",
+            $"jetbrains.resharper.globaltools@2025.2.5 inspectcode {BuildConstants.SolutionPath} -stdout",
             new JsonSerializerSettings
             {
                 ContractResolver = SarifContractResolverVersionOne.Instance
@@ -63,7 +63,7 @@ public class StaticAnalysisTargets : ITargetProvider
         {
             validationResults.Should().NotBeNull()
                 .And.Subject.Should().HaveCountGreaterThan(0, "there should be at least some license validation results");
-                
+
             var errorResults = validationResults
                 .Where(r => r.ValidationErrors is { Count: 0 })
                 .ToArray();
@@ -81,7 +81,7 @@ public class StaticAnalysisTargets : ITargetProvider
                      """
                 )
             ));
-            
+
             errorResults.Should().BeEmpty("there should not be any invalid licenses");
         });
 
@@ -111,6 +111,9 @@ public class StaticAnalysisTargets : ITargetProvider
             }
         );
     public ITarget CountLines => field ??= new Target(description: "Counts lines of code")
-        .RequireAptPackage("cloc", install: true)
-        .Executes($"cloc . --include-lang=C#");
+        .If(OperatingSystem.IsLinux,
+            t => t
+                .RequireAptPackage("cloc", install: true)
+                .Executes($"cloc . --include-lang=C#")
+        );
 }

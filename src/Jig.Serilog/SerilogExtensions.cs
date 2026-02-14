@@ -9,7 +9,7 @@ namespace Jig.Serilog;
 
 public static class SerilogExtensions
 {
-    private static ConsoleTheme DefaultSystemColorTheme => new SystemConsoleTheme(
+    private static ConsoleTheme DefaultSystemConsoleTheme => new SystemConsoleTheme(
         new Dictionary<ConsoleThemeStyle, SystemConsoleThemeStyle>
         {
             [ConsoleThemeStyle.Text] = new(),
@@ -79,6 +79,31 @@ public static class SerilogExtensions
                 Foreground = ConsoleColor.White,
                 Background = ConsoleColor.DarkRed
             },
+        });  
+    
+    private static ConsoleTheme DefaultAnsiConsoleTheme => new AnsiConsoleTheme(
+        new Dictionary<ConsoleThemeStyle, string>
+        {
+            [ConsoleThemeStyle.Text] = "",
+            [ConsoleThemeStyle.SecondaryText] = "\x1b[37m",   // Gray
+            [ConsoleThemeStyle.TertiaryText] = "\x1b[37m",    // Gray
+
+            [ConsoleThemeStyle.Name] = "\x1b[34m",            // Blue
+            [ConsoleThemeStyle.Invalid] = "\x1b[31m",         // DarkRed ≈ Red
+            [ConsoleThemeStyle.Null] = "\x1b[35m",            // DarkMagenta ≈ Magenta
+
+            [ConsoleThemeStyle.String] = "\x1b[33m",          // DarkYellow ≈ Yellow
+            [ConsoleThemeStyle.Number] = "\x1b[33m",
+            [ConsoleThemeStyle.Boolean] = "\x1b[33m",
+            [ConsoleThemeStyle.Scalar] = "\x1b[33m",
+
+            // Levels
+            [ConsoleThemeStyle.LevelVerbose] = "\x1b[38;47m",     // White on Gray
+            [ConsoleThemeStyle.LevelDebug] = "\x1b[38;100m",      // White on DarkGray
+            [ConsoleThemeStyle.LevelInformation] = "\x1b[38;46m", // White on Cyan
+            [ConsoleThemeStyle.LevelWarning] = "\x1b[30;43m",     // Black on Yellow (better contrast)
+            [ConsoleThemeStyle.LevelError] = "\x1b[38;41m",       // White on Red
+            [ConsoleThemeStyle.LevelFatal] = "\x1b[38;41m",       // White on DarkRed ≈ Red
         });
 
     extension<T>(T build) where T : IBuild
@@ -95,7 +120,7 @@ public static class SerilogExtensions
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(
                     outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss} " + $"{{{BuildStateIds.Target}}}" + ": {Message:l}{NewLine}{Exception}",
-                    theme: DefaultSystemColorTheme,
+                    theme: DefaultAnsiConsoleTheme,
                     applyThemeToRedirectedOutput: true
                 );
 
