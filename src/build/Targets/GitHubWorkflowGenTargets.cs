@@ -39,6 +39,12 @@ public class GitHubWorkflowGenTargets(
                     {
                         runs_on = "windows-latest"
                     }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                },
+                {
+                    "macos-latest", new Job()
+                    {
+                        runs_on = "macos-latest"
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
                 }
             };
         });
