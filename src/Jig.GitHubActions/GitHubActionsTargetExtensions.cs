@@ -75,7 +75,7 @@ public static class GitHubActionsTargetExtensions
 
             var name = $"Execute Targets: {resolvedTargets}";
             var buildProjPath = Path.Combine(IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."), "build", "build.csproj");
-            var script = $"dotnet run --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
+            var script = $"dotnet run --verbosity q --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
             var steps = new[]
             {
                 CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), CommonStepHelper.AddScriptStep(name, script)

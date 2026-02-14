@@ -24,11 +24,12 @@ public class StaticAnalysisTargets : ITargetProvider
         .After(() => Cleanup)
         .Unlisted()
         .ExecutesDotNetToolWithJsonOutput<SarifLog>(
-            $"jetbrains.resharper.globaltools@2025.2.5 inspectcode {BuildConstants.SolutionPath} -stdout",
+            $"jetbrains.resharper.globaltools inspectcode {BuildConstants.SolutionPath} -stdout",
             new JsonSerializerSettings
             {
                 ContractResolver = SarifContractResolverVersionOne.Instance
-            }
+            },
+            logging: ShellLoggingOptions.None
         );
 
     public ITarget Inspect => field ??= new Target(description: "Inspects code for issues")

@@ -25,9 +25,11 @@ public class AnsiParameterColorer(string[] parameterNames) : ILogEventEnricher
         using var sha = System.Security.Cryptography.SHA1.Create();
         var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(s));
 
-        var r = (hash[0] + 128) / 2;
-        var g = (hash[1] + 128) / 2;
-        var b = (hash[2] + 128) / 2;
+        var brightnessMultiplier = (float)byte.MaxValue / hash.Take(3).Max();
+
+        var r = (int)(hash[0] * brightnessMultiplier);
+        var g = (int)(hash[1] * brightnessMultiplier);
+        var b = (int)(hash[2] * brightnessMultiplier);
 
         return Color.FromArgb(r, g, b);
     }
