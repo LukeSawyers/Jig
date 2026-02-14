@@ -19,7 +19,11 @@ public class GitHubWorkflowGenTargets(
         {
             b.on = new()
             {
-                workflow_dispatch = new()
+                workflow_dispatch = new(),
+                pull_request = new()
+                {
+                    branches = ["**"]
+                }
             };
             
             b.jobs = new()
@@ -38,7 +42,11 @@ public class GitHubWorkflowGenTargets(
         {
             b.on = new()
             {
-                workflow_dispatch = new()
+                workflow_dispatch = new(),
+                push = new()
+                {
+                    branches = ["main"]
+                }
             };
             
             b.jobs = new()

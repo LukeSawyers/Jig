@@ -1,5 +1,8 @@
 name: merge-check
 on:
+  pull_request:
+    branches:
+    - '**'
   workflow_dispatch:
 jobs:
   ubuntu-latest:
@@ -9,4 +12,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: MergeCheck'
-      run: dotnet run --project ./src/build/build.csproj -- MergeCheck
+      run: dotnet run --project ./src/build/build.csproj -- MergeCheck --plan
