@@ -86,45 +86,26 @@ public static class SerilogExtensions
         new Dictionary<ConsoleThemeStyle, string>
         {
             [ConsoleThemeStyle.Text] = "",
-            [ConsoleThemeStyle.SecondaryText] = AnsiTrueColor(Color.Gray), // Gray
-            [ConsoleThemeStyle.TertiaryText] = AnsiTrueColor(Color.Gray), // Gray
+            [ConsoleThemeStyle.SecondaryText] = AnsiConsoleUtils.AnsiTrueColor(Color.Gray), // Gray
+            [ConsoleThemeStyle.TertiaryText] = AnsiConsoleUtils.AnsiTrueColor(Color.Gray), // Gray
 
-            [ConsoleThemeStyle.Name] =  AnsiTrueColor(Color.Blue),
-            [ConsoleThemeStyle.Invalid] = AnsiTrueColor(Color.DarkRed), 
-            [ConsoleThemeStyle.Null] = AnsiTrueColor(Color.DarkMagenta),
+            [ConsoleThemeStyle.Name] = AnsiConsoleUtils.AnsiTrueColor(Color.Blue),
+            [ConsoleThemeStyle.Invalid] = AnsiConsoleUtils.AnsiTrueColor(Color.DarkRed),
+            [ConsoleThemeStyle.Null] = AnsiConsoleUtils.AnsiTrueColor(Color.DarkMagenta),
 
-            [ConsoleThemeStyle.String] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
-            [ConsoleThemeStyle.Number] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
-            [ConsoleThemeStyle.Boolean] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
-            [ConsoleThemeStyle.Scalar] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
+            [ConsoleThemeStyle.String] = AnsiConsoleUtils.AnsiTrueColor(Color.FromArgb(161, 121, 19)),
+            [ConsoleThemeStyle.Number] = AnsiConsoleUtils.AnsiTrueColor(Color.FromArgb(161, 121, 19)),
+            [ConsoleThemeStyle.Boolean] = AnsiConsoleUtils.AnsiTrueColor(Color.FromArgb(161, 121, 19)),
+            [ConsoleThemeStyle.Scalar] = AnsiConsoleUtils.AnsiTrueColor(Color.FromArgb(161, 121, 19)),
 
             // Levels
-            [ConsoleThemeStyle.LevelVerbose] = AnsiTrueColor(Color.White, Color.Gray, bold: true),
-            [ConsoleThemeStyle.LevelDebug] = AnsiTrueColor(Color.White, Color.DarkGray, bold: true),
-            [ConsoleThemeStyle.LevelInformation] = AnsiTrueColor(Color.White, Color.DarkCyan, bold: true),
-            [ConsoleThemeStyle.LevelWarning] = AnsiTrueColor(Color.Black, Color.Orange, bold: true), 
-            [ConsoleThemeStyle.LevelError]  = AnsiTrueColor(Color.White, Color.Red, bold: true),
-            [ConsoleThemeStyle.LevelFatal] = AnsiTrueColor(Color.White, Color.DarkRed, bold: true),
+            [ConsoleThemeStyle.LevelVerbose] = AnsiConsoleUtils.AnsiTrueColor(Color.White, Color.Gray, bold: true),
+            [ConsoleThemeStyle.LevelDebug] = AnsiConsoleUtils.AnsiTrueColor(Color.White, Color.DarkGray, bold: true),
+            [ConsoleThemeStyle.LevelInformation] = AnsiConsoleUtils.AnsiTrueColor(Color.White, Color.DarkCyan, bold: true),
+            [ConsoleThemeStyle.LevelWarning] = AnsiConsoleUtils.AnsiTrueColor(Color.Black, Color.Orange, bold: true),
+            [ConsoleThemeStyle.LevelError] = AnsiConsoleUtils.AnsiTrueColor(Color.White, Color.Red, bold: true),
+            [ConsoleThemeStyle.LevelFatal] = AnsiConsoleUtils.AnsiTrueColor(Color.White, Color.DarkRed, bold: true),
         });
-
-    private static string AnsiTrueColor(
-        Color foreground,
-        Color? background = null,
-        bool bold = false
-    )
-    {
-        var boldCode = bold ? "1;" : string.Empty;
-        var code = $"\x1b[{boldCode}38;2;{foreground.R};{foreground.G};{foreground.B}";
-
-        if (background is { } bg)
-        {
-            code += $";48;2;{bg.R};{bg.G};{bg.B}";
-        }
-
-        code += "m";
-        return code;
-
-    }
 
     extension<T>(T build) where T : IBuild
     {
@@ -137,6 +118,7 @@ public static class SerilogExtensions
         {
             var configuration = new LoggerConfiguration()
                 .Enrich.FromLogContext()
+                .Enrich.With(new AnsiParameterColorer([BuildStateIds.Target]))
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(
                     outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss} " + $"{{{BuildStateIds.Target}}}" +
