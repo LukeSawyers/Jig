@@ -98,8 +98,9 @@ public class StaticAnalysisTargets : ITargetProvider
                 foreach (var project in projects)
                 {
                     var lines = File.ReadAllLines(project);
+                    var testProject = lines.Any(l => l.Contains("<IsTestProject>true"));
                     var notPackable = lines.Any(l => l.Contains("<IsPackable>false"));
-                    if (notPackable)
+                    if (testProject || notPackable)
                     {
                         continue;
                     }
