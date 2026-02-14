@@ -110,6 +110,6 @@ public class StaticAnalysisTargets : ITargetProvider
             }
         );
     public ITarget CountLines => field ??= new Target(description: "Counts lines of code")
-        .RequireAptPackage("cloc")
+        .RequireAptPackage("cloc", install: true)
         .Executes($"cloc . --include-lang=C#");
 }

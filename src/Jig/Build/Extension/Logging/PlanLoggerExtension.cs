@@ -3,14 +3,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Jig.Build.Extension.Logging;
 
-public class PlanLoggerOptions : IOptionsProvider
-{
-    public BuildOption<bool> Plan { get; } = new(
-        false,
-        description: "Print the build plan when the build starts"
-    );
-}
-
 /// <summary>
 /// Default build plan printer that exclusively uses <see cref="ILogger"/>
 /// </summary>

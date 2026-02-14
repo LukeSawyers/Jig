@@ -11,24 +11,15 @@ public static class AptTargetExtensions
     extension<T>(T target) where T : ITarget
     {
         /// <summary>
-        /// Adds an execution to this target that ensures that all the specified apt packages are installed.
+        /// Adds an execution to this target that ensures that the specified apt package is installed.
         /// If user input is enabled, it will present options for the user to install the package.
         /// </summary>
-        /// <param name="packages"></param>
+        /// <param name="package">The apt package</param>
+        /// <param name="install">Attempt to install if not present without prompting</param>
         /// <returns></returns>
-        public T RequireAptPackage(params string[] packages)
+        public T RequireAptPackage(string package, bool install = false)
         {
-            foreach (var package in packages)
-            {
-                target.RequireAptPackageInternal(package);
-            }
-
-            return target;
-        }
-
-        private void RequireAptPackageInternal(string package)
-        {
-            target.Executes(async (
+            return target.Executes(async (
                     ILogger logger,
                     IUserInput userInput,
                     Shell.Shell shell
@@ -45,20 +36,19 @@ public static class AptTargetExtensions
                         return;
                     }
 
-                    var notInstalledException = new ValidationException(
-                        $"Apt package {package} was required by {target.Name} but was not installed"
-                    );
-
-                    if (!userInput.Enabled)
+                    if (!install)
                     {
-                        throw notInstalledException;
+                        if (userInput.Enabled)
+                        {
+                            install = await userInput.PromptBoolAsync($"Install {package}?");
+                        }
                     }
-
-                    var install = await userInput.PromptBoolAsync($"Install {package}?");
 
                     if (!install)
                     {
-                        throw notInstalledException;
+                        throw new ValidationException(
+                            $"Apt package {package} was required by {target.Name} but was not installed"
+                        );
                     }
 
                     await shell

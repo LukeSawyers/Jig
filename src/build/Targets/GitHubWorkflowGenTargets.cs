@@ -28,7 +28,7 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.MergeCheck)
+                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
                 }
             };
         });
@@ -47,7 +47,7 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.Deploy)
+                    }.AddStepsFromTargets(() => workflows.Deploy, "--plan")
                 }
             };
         });

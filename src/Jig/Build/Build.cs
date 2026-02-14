@@ -1,8 +1,6 @@
 ﻿using System.IO.Abstractions;
 using DotNetEnv;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Jig.Build;
 
@@ -44,6 +42,8 @@ public class Build : IBuild
         
         var repositoryRootDirectory = rootDirectory.FullName;
         Directory.SetCurrentDirectory(Path.Combine(repositoryRootDirectory, workingDirectory));
+        
+        // Build context
         IBuildContext.RepositoryRootDirectory = repositoryRootDirectory;
         var buildContext = new BuildContext();
         

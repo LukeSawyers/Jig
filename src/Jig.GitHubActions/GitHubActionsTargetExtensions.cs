@@ -63,18 +63,19 @@ public static class GitHubActionsTargetExtensions
         ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
         /// </summary>
         /// <returns></returns>
-        public Job AddStepsFromTargets(Func<ITarget> target, params Func<ITarget>[] targets)
+        public Job AddStepsFromTargets(Func<ITarget> target, params string[] args) => job.AddStepsFromTargets([target], args);
+        
+        /// <summary>
+        ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
+        /// </summary>
+        /// <returns></returns>
+        public Job AddStepsFromTargets(Func<ITarget>[] targets, params string[] args)
         {
-            var resolvedTargets = new[]
-                {
-                    target
-                }
-                .Concat(targets.ToArray())
-                .StringJoin(t => t().Name, " ");
+            var resolvedTargets = targets.StringJoin(t => t().Name, " ");
 
             var name = $"Execute Targets: {resolvedTargets}";
             var buildProjPath = Path.Combine(IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."), "build", "build.csproj");
-            var script = $"dotnet run --project {buildProjPath} -- {resolvedTargets}";
+            var script = $"dotnet run --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
             var steps = new[]
             {
                 CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), CommonStepHelper.AddScriptStep(name, script)
