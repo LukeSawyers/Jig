@@ -21,8 +21,8 @@ public static class AptTargetExtensions
         {
             return target.Executes(async (
                     ILogger logger,
-                    IUserInput userInput,
-                    Shell.Shell shell
+                    Shell.Shell shell,
+                    IUserInput? userInput = null
                 ) =>
                 {
                     var packageStatusResult = await shell
@@ -38,7 +38,7 @@ public static class AptTargetExtensions
 
                     if (!install)
                     {
-                        if (userInput.Enabled)
+                        if (userInput?.Enabled == true)
                         {
                             install = await userInput.PromptBoolAsync($"Install {package}?");
                         }
@@ -53,7 +53,7 @@ public static class AptTargetExtensions
 
                     await shell
                         .Command($"sudo apt-get install {package}")
-                        .WithStandardInputPipe(userInput.CreateInputPipeSource())
+                        .WithStandardInputPipe(userInput?.CreateInputPipeSource() ?? PipeSource.Null)
                         .ExecuteAsync();
                 },
                 $"Require that apt package {package} is installed, and prompt user to install if not"
