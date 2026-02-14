@@ -95,7 +95,8 @@ public class ShellCommandExtensionsTests
 
         // Assert
         using var _ = new AssertionScope();
-        dotnetToolCommand.Format.Should().Contain("ENV1=VAL1 /usr/bin/pwsh");
+        dotnetToolCommand.Format.Should()
+            .Contain(OperatingSystem.IsWindows() ? "ENV1=VAL1 powershell" : "ENV1=VAL1 /usr/bin/pwsh");
         dotnetToolCommand.Format.Should().Contain("tool --with {0}");
         var resultArg = dotnetToolCommand.GetArgument(0);
         resultArg.Should().NotBeNull();
