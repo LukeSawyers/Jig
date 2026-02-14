@@ -64,7 +64,7 @@ public static class GitHubActionsTargetExtensions
         /// </summary>
         /// <returns></returns>
         public Job AddStepsFromTargets(Func<ITarget> target, params string[] args) => job.AddStepsFromTargets([target], args);
-        
+
         /// <summary>
         ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
         /// </summary>
@@ -74,7 +74,12 @@ public static class GitHubActionsTargetExtensions
             var resolvedTargets = targets.StringJoin(t => t().Name, " ");
 
             var name = $"Execute Targets: {resolvedTargets}";
-            var buildProjPath = Path.Combine(IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."), "build", "build.csproj");
+            var buildProjPath = Path.Combine(
+                IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."),
+                "build",
+                "build.csproj"
+            ).Replace('\\', '/');
+
             var script = $"dotnet run --verbosity q --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
             var steps = new[]
             {

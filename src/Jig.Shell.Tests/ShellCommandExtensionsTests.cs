@@ -113,7 +113,7 @@ public class ShellCommandExtensionsTests
         };
 
         // Act
-        var output = await Cli.Wrap($"echo")
+        var output = await Cli.Wrap("echo")
             .WithArguments(expectedLines.StringJoin(Environment.NewLine))
             .ExecuteAndCaptureOutputAsync(CancellationToken.None)
             .ToArrayAsync();
