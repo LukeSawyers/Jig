@@ -98,12 +98,12 @@ public static class SerilogExtensions
             [ConsoleThemeStyle.Scalar] = "\x1b[33m",
 
             // Levels
-            [ConsoleThemeStyle.LevelVerbose] = "\x1b[38;47m",     // White on Gray
-            [ConsoleThemeStyle.LevelDebug] = "\x1b[38;100m",      // White on DarkGray
-            [ConsoleThemeStyle.LevelInformation] = "\x1b[38;46m", // White on Cyan
-            [ConsoleThemeStyle.LevelWarning] = "\x1b[30;43m",     // Black on Yellow (better contrast)
-            [ConsoleThemeStyle.LevelError] = "\x1b[38;41m",       // White on Red
-            [ConsoleThemeStyle.LevelFatal] = "\x1b[38;41m",       // White on DarkRed ≈ Red
+            [ConsoleThemeStyle.LevelVerbose] = "\x1b[38;5;47;1m",     // White on Gray
+            [ConsoleThemeStyle.LevelDebug] = "\x1b[38;5;100;1m",      // White on DarkGray
+            [ConsoleThemeStyle.LevelInformation] = "\x1b[38;5;46;1m", // White on Cyan
+            [ConsoleThemeStyle.LevelWarning] = "\x1b[30;5;43;1m",     // Black on Yellow (better contrast)
+            [ConsoleThemeStyle.LevelError] = "\x1b[38;5;41;1m",       // White on Red
+            [ConsoleThemeStyle.LevelFatal] = "\x1b[38;5;41;1m",       // White on DarkRed ≈ Red
         });
 
     extension<T>(T build) where T : IBuild
