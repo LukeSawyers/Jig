@@ -15,7 +15,7 @@ using Jig.Targets;
 
 namespace build.Targets;
 
-public class StaticAnalysisTargets : ITargetProvider
+public class StaticAnalysisTargets(DotnetTargets dotnetTargets) : ITargetProvider
 {
     ITarget Cleanup => field ??= new Target(description: "Cleans up code")
         .ExecutesDotNetTool($"jetbrains.resharper.globaltools cleanupcode {BuildConstants.SolutionPath}");
@@ -47,6 +47,7 @@ public class StaticAnalysisTargets : ITargetProvider
 
     public ITarget CheckLicenses => field ??= new Target(description: "Gets nuget package license validation results")
         .Unlisted()
+        .DependentOn(() => dotnetTargets.Build)
         .ExecutesDotNetToolWithJsonOutput<LicenseValidationResult[]>(
             $"""
              nuget-license -i {BuildConstants.SolutionPath} 

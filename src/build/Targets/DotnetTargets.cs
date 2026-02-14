@@ -19,12 +19,8 @@ public class DotnetTargets : ITargetProvider
     BuildOption<string?> NugetApiKey { get; } = new(null, sensitive: true, description: "API key used to push nuget packages");
 
     // Build & Test
-    public ITarget Restore => field ??= new Target(description: "Restores the solution")
-        .Executes($"dotnet restore {BuildConstants.SolutionPath} --verbosity {Verbosity}");
-
     public ITarget Build => field ??= new Target(description: "Builds the solution")
         .Executes($"dotnet build {BuildConstants.SolutionPath} --verbosity {Verbosity} --configuration Release")
-        .If(OperatingSystem.IsWindows(), t => t.DependentOn(() => Restore))
         .WithResilience(ApplyRetry);
 
     public ITarget Test => field ??= new Target(description: "Tests the solution")
