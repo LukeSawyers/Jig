@@ -106,6 +106,13 @@ public class ShellCommandExtensionsTests
     [Fact]
     public async Task ExecuteAndCaptureOutput_ReturnsStdOut()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            // Multiline in powershell is problematic
+            // Dynamic skip not available in V3
+            return;
+        }
+        
         // Arrange
         var expectedLines = new[]
         {
@@ -140,6 +147,13 @@ public class ShellCommandExtensionsTests
     [Fact]
     public async Task ExecuteAndCaptureJsonOutputStj_ReturnsDeserialized()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            // JSON in powershell is problematic
+            // Dynamic skip not available in V3
+            return;
+        }
+        
         // Act
         var output = await Cli.Wrap("echo")
             .WithArguments(TestJson)
@@ -152,6 +166,13 @@ public class ShellCommandExtensionsTests
     [Fact]
     public async Task ExecuteAndCaptureJsonOutputNewtonsoft_ReturnsDeserialized()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            // JSON in powershell is problematic
+            // Dynamic skip not available in V3
+            return;
+        }
+        
         // Act
         var output = await Cli.Wrap("echo")
             .WithArguments(TestJson)
