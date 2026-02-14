@@ -1,6 +1,10 @@
 using System.Drawing;
+using System.Security.Cryptography;
+using System.Text;
+using ColorHelper;
 using Serilog.Core;
 using Serilog.Events;
+using ColorConverter = ColorHelper.ColorConverter;
 
 namespace Jig.Serilog;
 
@@ -13,7 +17,8 @@ public class AnsiParameterColorer(string[] parameterNames) : ILogEventEnricher
         {
             if (parameterNames.Contains(prop.Key) && prop.Value is ScalarValue { Value: { } value })
             {
-                var colored = $"{AnsiConsoleUtils.AnsiTrueColor(ColorFromValue(value))}{value}{AnsiConsoleUtils.Reset}";
+                var background = ColorFromValue(value);
+                var colored = $"{AnsiConsoleUtils.AnsiTrueColor(background, bold: true)}{value}{AnsiConsoleUtils.Reset}";
                 logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(prop.Key, colored));
             }
         }
@@ -22,15 +27,10 @@ public class AnsiParameterColorer(string[] parameterNames) : ILogEventEnricher
     private static Color ColorFromValue(object value)
     {
         var s = value.ToString() ?? "";
-        using var sha = System.Security.Cryptography.SHA1.Create();
-        var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(s));
-
-        var brightnessMultiplier = (float)byte.MaxValue / hash.Take(3).Max();
-
-        var r = (int)(hash[0] * brightnessMultiplier);
-        var g = (int)(hash[1] * brightnessMultiplier);
-        var b = (int)(hash[2] * brightnessMultiplier);
-
-        return Color.FromArgb(r, g, b);
+        using var sha = SHA1.Create();
+        var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(s));
+        var hue = BitConverter.ToInt32(hash) % 360;
+        var color = ColorConverter.HslToRgb(new HSL(hue, 100, 50));
+        return Color.FromArgb(color.R, color.G, color.B);
     }
 }
