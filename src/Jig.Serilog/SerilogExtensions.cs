@@ -1,3 +1,4 @@
+using System.Drawing;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -79,32 +80,51 @@ public static class SerilogExtensions
                 Foreground = ConsoleColor.White,
                 Background = ConsoleColor.DarkRed
             },
-        });  
-    
+        });
+
     private static ConsoleTheme DefaultAnsiConsoleTheme => new AnsiConsoleTheme(
         new Dictionary<ConsoleThemeStyle, string>
         {
             [ConsoleThemeStyle.Text] = "",
-            [ConsoleThemeStyle.SecondaryText] = "\x1b[37m",   // Gray
-            [ConsoleThemeStyle.TertiaryText] = "\x1b[37m",    // Gray
+            [ConsoleThemeStyle.SecondaryText] = AnsiTrueColor(Color.Gray), // Gray
+            [ConsoleThemeStyle.TertiaryText] = AnsiTrueColor(Color.Gray), // Gray
 
-            [ConsoleThemeStyle.Name] = "\x1b[34m",            // Blue
-            [ConsoleThemeStyle.Invalid] = "\x1b[31m",         // DarkRed ≈ Red
-            [ConsoleThemeStyle.Null] = "\x1b[35m",            // DarkMagenta ≈ Magenta
+            [ConsoleThemeStyle.Name] =  AnsiTrueColor(Color.Blue),
+            [ConsoleThemeStyle.Invalid] = AnsiTrueColor(Color.DarkRed), 
+            [ConsoleThemeStyle.Null] = AnsiTrueColor(Color.DarkMagenta),
 
-            [ConsoleThemeStyle.String] = "\x1b[33m",          // DarkYellow ≈ Yellow
-            [ConsoleThemeStyle.Number] = "\x1b[33m",
-            [ConsoleThemeStyle.Boolean] = "\x1b[33m",
-            [ConsoleThemeStyle.Scalar] = "\x1b[33m",
+            [ConsoleThemeStyle.String] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
+            [ConsoleThemeStyle.Number] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
+            [ConsoleThemeStyle.Boolean] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
+            [ConsoleThemeStyle.Scalar] = AnsiTrueColor(Color.FromArgb(161, 121, 19)), 
 
             // Levels
-            [ConsoleThemeStyle.LevelVerbose] = "\x1b[38;5;47;1m",     // White on Gray
-            [ConsoleThemeStyle.LevelDebug] = "\x1b[38;5;100;1m",      // White on DarkGray
-            [ConsoleThemeStyle.LevelInformation] = "\x1b[38;5;46;1m", // White on Cyan
-            [ConsoleThemeStyle.LevelWarning] = "\x1b[30;5;43;1m",     // Black on Yellow (better contrast)
-            [ConsoleThemeStyle.LevelError] = "\x1b[38;5;41;1m",       // White on Red
-            [ConsoleThemeStyle.LevelFatal] = "\x1b[38;5;41;1m",       // White on DarkRed ≈ Red
+            [ConsoleThemeStyle.LevelVerbose] = AnsiTrueColor(Color.White, Color.Gray, bold: true),
+            [ConsoleThemeStyle.LevelDebug] = AnsiTrueColor(Color.White, Color.DarkGray, bold: true),
+            [ConsoleThemeStyle.LevelInformation] = AnsiTrueColor(Color.White, Color.DarkCyan, bold: true),
+            [ConsoleThemeStyle.LevelWarning] = AnsiTrueColor(Color.Black, Color.Orange, bold: true), 
+            [ConsoleThemeStyle.LevelError]  = AnsiTrueColor(Color.White, Color.Red, bold: true),
+            [ConsoleThemeStyle.LevelFatal] = AnsiTrueColor(Color.White, Color.DarkRed, bold: true),
         });
+
+    private static string AnsiTrueColor(
+        Color foreground,
+        Color? background = null,
+        bool bold = false
+    )
+    {
+        var boldCode = bold ? "1;" : string.Empty;
+        var code = $"\x1b[{boldCode}38;2;{foreground.R};{foreground.G};{foreground.B}";
+
+        if (background is { } bg)
+        {
+            code += $";48;2;{bg.R};{bg.G};{bg.B}";
+        }
+
+        code += "m";
+        return code;
+
+    }
 
     extension<T>(T build) where T : IBuild
     {
@@ -119,7 +139,8 @@ public static class SerilogExtensions
                 .Enrich.FromLogContext()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(
-                    outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss} " + $"{{{BuildStateIds.Target}}}" + ": {Message:l}{NewLine}{Exception}",
+                    outputTemplate: "[{Level:u3}] {Timestamp:HH:mm:ss} " + $"{{{BuildStateIds.Target}}}" +
+                                    ": {Message:l}{NewLine}{Exception}",
                     theme: DefaultAnsiConsoleTheme,
                     applyThemeToRedirectedOutput: true
                 );
@@ -133,7 +154,7 @@ public static class SerilogExtensions
 
             build.Services.AddLogging(b => b.AddSerilog(Log.Logger));
             build.AddDefaultLoggingExtensions();
-            
+
             return build;
         }
     }
