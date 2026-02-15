@@ -1,3 +1,4 @@
+using System.Diagnostics.Tracing;
 using Jig.Targets;
 
 namespace build.Targets;
@@ -7,11 +8,21 @@ public class Workflows(
     StaticAnalysisTargets staticAnalysis
 ) : ITargetProvider
 {
-    public ITarget MergeCheck => field ??= new Target(description: "Runs required merge checks")
+    public ITarget Validate => field ??= new Target(description: "Runs all validation checks")
+        .DependentOn(
+            () => ValidateCode,
+            () => InspectCode
+        );
+    
+    public ITarget ValidateCode => field ??= new Target(description: "Validates code compiles and runs correctly")
         .DependentOn(
             () => dotnet.Build,
             () => dotnet.Test,
-            () => dotnet.Pack,
+            () => dotnet.Pack
+        );
+
+    public ITarget InspectCode => field ??= new Target(description: "Runs code quality checks")
+        .DependentOn(
             () => staticAnalysis.Inspect,
             () => staticAnalysis.ValidateLicenses,
             () => staticAnalysis.PackageDescriptionCheck,
