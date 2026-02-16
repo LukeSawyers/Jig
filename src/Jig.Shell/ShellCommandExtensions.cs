@@ -57,28 +57,27 @@ public static class ShellCommandExtensions
                     arguments[i] = redactedString;
                 }
             }
-            
+
             return FormattableStringFactory.Create(format, arguments);
         }
 
         public FormattableString ToPrintableCommandString()
         {
             var format = command.Format;
-            var arguments = new object?[command.ArgumentCount];
 
             var shellCommand = ShellCommand.Parse(command.ToString());
 
             format = format.Replace(shellCommand.Tool, "{Tool}");
             format += " @ {CurrentDirectory}";
 
-            arguments = new[]
+            var arguments = new[]
                 {
                     shellCommand.Tool
                 }
-                .Concat(arguments)
+                .Concat(command.GetArguments())
                 .Append(Directory.GetCurrentDirectory())
                 .ToArray();
-            
+
             return FormattableStringFactory.Create(format, arguments);
         }
 
@@ -212,7 +211,7 @@ public static class ShellCommandExtensions
             throw new NotSupportedException($"{Environment.OSVersion.Platform} not supported");
         }
     }
-    
+
     extension(Command command)
     {
         /// <summary>
@@ -228,23 +227,14 @@ public static class ShellCommandExtensions
                     await output.Writer.WriteAsync(line, stoppingToken)))
                 .ExecuteAsync(stoppingToken);
 
-            while (true)
+            var completeTask = commandExecution.Task.ContinueWith(_ => output.Writer.Complete(), stoppingToken);
+
+            await foreach (var line in output.Reader.ReadAllAsync(stoppingToken))
             {
-                // Wait for either an output line or for the process to complete
-                var readTask = output.Reader.ReadAsync(stoppingToken).AsTask();
-                await Task.WhenAny(commandExecution.Task, readTask);
-                // If the read task was the one that completed, yield return then retry
-                if (readTask.IsCompletedSuccessfully)
-                {
-                    yield return readTask.Result;
-                }
-                else
-                {
-                    break;
-                }
+                yield return line;
             }
 
-            await commandExecution.Task;
+            await completeTask;
         }
 
         /// <summary>
@@ -268,7 +258,7 @@ public static class ShellCommandExtensions
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
         public ValueTask<T?> ExecuteAndCaptureJsonOutputAsync<T>(
-            JsonSerializerOptions? options = null, 
+            JsonSerializerOptions? options = null,
             CancellationToken stoppingToken = default
         ) => command
             .ExecuteAndCaptureOutputAsync(stoppingToken)

@@ -24,8 +24,7 @@ public static class ShellTargetExtensions
 
             return target.Executes(async (Shell shell, CancellationToken stoppingToken) => await shell
                     .DotnetToolCommand(command, validation, logging)
-                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(),
-                        stoppingToken),
+                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(), stoppingToken),
                 description
             );
         }

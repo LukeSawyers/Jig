@@ -8,7 +8,7 @@ public class GitHubWorkflowGenTargets(
     Workflows workflows
 ) : ITargetProvider
 {
-    public ITarget GenerateGitHubWorkflows => field ??= new Target(description: "Genrates all github workflows")
+    public ITarget GenerateGitHubWorkflows => field ??= new Target(description: "Generats all github workflows")
         .DependentOn(
             () => MergeCheck,
             () => Deploy
@@ -32,19 +32,19 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                    }.AddStepsFromTargets(() => workflows.Validate, "--plan")
                 },
                 {
                     "windows-latest", new Job()
                     {
                         runs_on = "windows-latest"
-                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                    }.AddStepsFromTargets(() => workflows.ValidateCode, "--plan")
                 },
                 {
                     "macos-latest", new Job()
                     {
                         runs_on = "macos-latest"
-                    }.AddStepsFromTargets(() => workflows.MergeCheck, "--plan")
+                    }.AddStepsFromTargets(() => workflows.ValidateCode, "--plan")
                 }
             };
         });
