@@ -41,7 +41,7 @@ public class NotificationEmitter(
         else if (OperatingSystem.IsMacOS())
         {
             await shell.Command(
-                    $"osascript -e \"display notification \\\"{message}\\\"",
+                    $"osascript -e \"display notification \\\"{message}\\\" with title \\\"Jig\\\"\"",
                     logging: ShellLoggingOptions.StandardError
                 )
                 .WithValidation(CommandResultValidation.None)

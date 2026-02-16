@@ -12,4 +12,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: Deploy'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Deploy --plan
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Deploy --plan --nuget-api-key ${{ secrets.NUGET_API_KEY }}

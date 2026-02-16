@@ -5,11 +5,12 @@ using GitHubActionsDotNet.Serialization;
 using Humanizer;
 using Jig.Build;
 using Jig.Lang;
+using Jig.Options;
 using Jig.Targets;
 
 namespace Jig.GitHubActions;
 
-public static class GitHubActionsTargetExtensions
+public static class TargetStepHelper
 {
     extension<TTarget>(TTarget target) where TTarget : ITarget
     {
@@ -57,37 +58,30 @@ public static class GitHubActionsTargetExtensions
         }
     }
 
-    extension(Job job)
+    /// <summary>
+    ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
+    /// </summary>
+    /// <returns></returns>
+    public static Step ScriptStepFromTargets(ITarget targets, params string[] args) => ScriptStepFromTargets([targets], args);
+    
+    /// <summary>
+    ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
+    /// </summary>
+    /// <returns></returns>
+    public static Step ScriptStepFromTargets(ITarget[] targets, params string[] args)
     {
-        /// <summary>
-        ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
-        /// </summary>
-        /// <returns></returns>
-        public Job AddStepsFromTargets(Func<ITarget> target, params string[] args) => job.AddStepsFromTargets([target], args);
+        var resolvedTargets = targets.StringJoin(t => t.Name, " ");
 
-        /// <summary>
-        ///     Adds an execution to this target that generates github actions workflows based on the supplied arguments
-        /// </summary>
-        /// <returns></returns>
-        public Job AddStepsFromTargets(Func<ITarget>[] targets, params string[] args)
-        {
-            var resolvedTargets = targets.StringJoin(t => t().Name, " ");
+        var name = $"Execute Targets: {resolvedTargets}";
+        var buildProjPath = Path.Combine(
+            IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."),
+            "build",
+            "build.csproj"
+        ).Replace('\\', '/');
 
-            var name = $"Execute Targets: {resolvedTargets}";
-            var buildProjPath = Path.Combine(
-                IBuildContext.CurrentDirectory.Replace(IBuildContext.RepositoryRootDirectory, "."),
-                "build",
-                "build.csproj"
-            ).Replace('\\', '/');
-
-            var script = $"dotnet run --verbosity q --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
-            var steps = new[]
-            {
-                CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), CommonStepHelper.AddScriptStep(name, script)
-            };
-
-            job.steps = (job.steps ?? []).Concat(steps).ToArray();
-            return job;
-        }
+        var script = $"dotnet run --verbosity q --project {buildProjPath} -- {resolvedTargets} {args.StringJoin(" ")}";
+        return CommonStepHelper.AddScriptStep(name, script);
     }
+
+    public static string ArgFromSecrets(IBuildOption option) => $"{option.Option.Name} ${{{{ secrets.{option.EnvName} }}}}";
 }

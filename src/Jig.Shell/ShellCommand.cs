@@ -17,42 +17,22 @@ public record ShellCommand(
     public static ShellCommand Parse(string command)
     {
         var envVars = new Dictionary<string, string?>();
-        string? tool = null;
-        var args = "";
 
-        var processedEnvVars = false;
         foreach (var token in CommandLineParser.SplitCommandLine(command))
         {
-            if (!processedEnvVars)
+            if (token.Contains('='))
             {
-                if (token.Contains('='))
-                {
-                    var split = token.Split('=');
-                    envVars[split[0]] = split[1];
-                }
-                else
-                {
-                    processedEnvVars = true;
-                    tool = token;
-                }
+                var split = token.Split('=');
+                envVars[split[0]] = split[1];
+                command = command.Replace(token, "");
             }
             else
             {
-                var t = token;
-                if (token.Contains(' '))
-                {
-                    t = $"\"{token}\"";
-                }
-
-                args += $" {t}";
+                var args = command.Substring(command.IndexOf(token) + token.Length);
+                return new ShellCommand(envVars, token, args.Trim());
             }
         }
-
-        if (tool is null)
-        {
-            throw new ArgumentException($"No tool found in command string: {command}");
-        }
-
-        return new ShellCommand(envVars, tool, args.Trim());
+        
+        throw new ArgumentException($"No tool found in command string: {command}");
     }
 }

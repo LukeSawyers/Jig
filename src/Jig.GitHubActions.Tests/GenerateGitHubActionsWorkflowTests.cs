@@ -33,7 +33,8 @@ public class GenerateGitHubActionsWorkflowTests(ITestOutputHelper outputHelper)
                         "ubuntu-latest", new Job
                         {
                             runs_on = "ubuntu-latest",
-                        }.AddStepsFromTargets(() => Target)
+                            steps = [TargetStepHelper.ScriptStepFromTargets(Target)]
+                        }
                     }
                 };
             });
