@@ -12,11 +12,11 @@ namespace build.Targets;
 
 public class DotnetTargets : ITargetProvider
 {
-    BuildOption<string> Verbosity { get; } = new("minimal", description: "Verbosity for dotnet tasks");
+    public BuildOption<string> Verbosity { get; } = new("minimal", description: "Verbosity for dotnet tasks");
 
-    BuildOption<bool> Retry { get; } = new(false, description: "Runs relevant targets in a retry loop");
+    public BuildOption<bool> Retry { get; } = new(false, description: "Runs relevant targets in a retry loop");
 
-    BuildOption<string?> NugetApiKey { get; } = new(null, sensitive: true, description: "API key used to push nuget packages");
+    public BuildOption<string?> NugetApiKey { get; } = new(null, sensitive: true, description: "API key used to push nuget packages");
 
     // Build & Test
     public ITarget Build => field ??= new Target(description: "Builds the solution")

@@ -1,3 +1,4 @@
+using GitHubActionsDotNet.Helpers;
 using GitHubActionsDotNet.Models;
 using Jig.GitHubActions;
 using Jig.Targets;
@@ -5,10 +6,11 @@ using Jig.Targets;
 namespace build.Targets;
 
 public class GitHubWorkflowGenTargets(
+    DotnetTargets dotnet,
     Workflows workflows
 ) : ITargetProvider
 {
-    public ITarget GenerateGitHubWorkflows => field ??= new Target(description: "Generats all github workflows")
+    public ITarget GenerateGitHubWorkflows => field ??= new Target(description: "Generates all github workflows")
         .DependentOn(
             () => MergeCheck,
             () => Deploy
@@ -22,7 +24,8 @@ public class GitHubWorkflowGenTargets(
                 workflow_dispatch = new(),
                 pull_request = new()
                 {
-                    branches = ["**"]
+                    branches = ["**"],
+                    branches_ignore = ["main"]
                 }
             };
             
@@ -32,19 +35,34 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.Validate, "--plan")
+                        steps = 
+                        [
+                            CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
+                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                        ]
+                    }
                 },
                 {
                     "windows-latest", new Job()
                     {
-                        runs_on = "windows-latest"
-                    }.AddStepsFromTargets(() => workflows.ValidateCode, "--plan")
+                        runs_on = "windows-latest",
+                        steps = 
+                        [
+                            CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
+                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                        ]
+                    }
                 },
                 {
                     "macos-latest", new Job()
                     {
-                        runs_on = "macos-latest"
-                    }.AddStepsFromTargets(() => workflows.ValidateCode, "--plan")
+                        runs_on = "macos-latest",
+                        steps = 
+                        [
+                            CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
+                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                        ]
+                    }
                 }
             };
         });
@@ -67,7 +85,16 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
-                    }.AddStepsFromTargets(() => workflows.Deploy, "--plan")
+                        steps = 
+                        [
+                            CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
+                            TargetStepHelper.ScriptStepFromTargets(
+                                workflows.Deploy, 
+                                "--plan",
+                                TargetStepHelper.ArgFromSecrets(dotnet.NugetApiKey)
+                            )
+                        ]
+                    }
                 }
             };
         });

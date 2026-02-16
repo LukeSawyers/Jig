@@ -10,5 +10,10 @@ public interface IBuildOption
     
     Option Option { get; }
 
+    /// <summary>
+    /// The name used by this option when drawing from environment variables
+    /// </summary>
+    string EnvName { get; }
+    
     void Set(ParseResult parseResult);
 }

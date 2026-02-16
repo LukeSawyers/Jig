@@ -45,7 +45,8 @@ public class BuildOption<T>(
     /// <inheritdoc/>
     public Option Option => option;
 
-    private string EnvName => option.Name.Trim('-').Underscore().ToUpperInvariant();
+    /// <inheritdoc/>
+    public string EnvName => option.Name.Trim('-').Underscore().ToUpperInvariant();
     
     /// <inheritdoc/>
     public void Set(ParseResult parseResult)
