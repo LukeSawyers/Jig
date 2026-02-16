@@ -24,8 +24,7 @@ public class GitHubWorkflowGenTargets(
                 workflow_dispatch = new(),
                 pull_request = new()
                 {
-                    branches = ["**"],
-                    branches_ignore = ["main"]
+                    branches = ["**"]
                 }
             };
             
