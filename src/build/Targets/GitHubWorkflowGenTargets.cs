@@ -48,7 +48,7 @@ public class GitHubWorkflowGenTargets(
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
-                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan")
                         ]
                     }
                 },
@@ -59,7 +59,7 @@ public class GitHubWorkflowGenTargets(
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
-                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan")
                         ]
                     }
                 }

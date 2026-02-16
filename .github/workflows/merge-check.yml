@@ -19,13 +19,13 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: 'Execute Targets: Validate'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Validate --plan
+    - name: 'Execute Targets: ValidateCode'
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan
   macos-latest:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: 'Execute Targets: Validate'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Validate --plan
+    - name: 'Execute Targets: ValidateCode'
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan
