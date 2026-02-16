@@ -12,9 +12,31 @@ Provides extensions and helpers for:
 Call `.GeneratesGitHubActionsWorkflow()` on a target to make the target generate a workflow. 
 The method accepts a builder lambda which will allow you to construct the workflow. 
 
-To create a job that runs targets, call extension method: 
+To create a job that runs targets, call helper methods to generate script steps from `ITarget`s and `IBuildOption`s: 
 ```csharp
-new Job().AddStepsFromTargets(() => Target, () => NextTarget, ...)
+.GeneratesGitHubActionsWorkflow(b =>
+{    
+    b.jobs = new()
+    {
+        {
+            "ubuntu-latest", new Job
+            {
+                runs_on = "ubuntu-latest",
+                steps = 
+                [
+                    CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
+                    TargetStepHelper.ScriptStepFromTargets(
+                        // Invokes this target
+                        workflows.Deploy, 
+                        "--plan",
+                        // With this cli parameter using a secret
+                        TargetStepHelper.ArgFromSecrets(dotnet.NugetApiKey)
+                    )
+                ]
+            }
+        }
+    };
+});
 ```
 
 The workflow will be named after the target. 

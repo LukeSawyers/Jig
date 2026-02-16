@@ -28,6 +28,7 @@ dotnet add package Jig.Serilog
 ```
 
 ```xml
+
 <PackageReference Include="Jig" Version="X.Y.Z"/>
 <PackageReference Include="Jig.Shell" Version="X.Y.Z"/>
 <PackageReference Include="Jig.Serilog" Version="X.Y.Z"/>
@@ -269,14 +270,15 @@ extension allows for these to be logged instead of targets being run when the `-
 
 ## Extensions
 
-| Extension                                                            | Description                                                       |
-|----------------------------------------------------------------------|-------------------------------------------------------------------|
-| [Jig.Shell](./src/Jig.Shell/README.md)                               | Extensions executing cli tools and shell commands                 |
-| [Jig.Serilog](./src/Jig.Serilog/README.md)                           | Serilog logging implemenetation                                   |
-| [Jig.Polly](./src/Jig.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies |
-| [Jig.DesktopNotifications](./src/Jig.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events         |
-| [Jig.UserInput](./src/Jig.UserInput/README.md)                       | Extensions allowing user input during builds                      |
-| [Jig.Apt](./src/Jig.Apt/README.md)                                   | Extensions for interacting with apt packages                      |
+| Extension                                                            | Description                                                                    |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [Jig.Shell](./src/Jig.Shell/README.md)                               | Extensions executing cli tools and shell commands                              |
+| [Jig.Serilog](./src/Jig.Serilog/README.md)                           | Serilog logging implemenetation                                                |
+| [Jig.GitHubActions](./src/Jig.GitHubActions/README.md)               | Extensions for interacting with github actions, including generating workflows |
+| [Jig.Polly](./src/Jig.Polly/README.md)                               | Extensions wrapping target executions in polly execution policies              |
+| [Jig.DesktopNotifications](./src/Jig.DesktopNotifications/README.md) | Extensions enabling desktop notifications on build events                      |
+| [Jig.UserInput](./src/Jig.UserInput/README.md)                       | Extensions allowing user input during builds                                   |
+| [Jig.Apt](./src/Jig.Apt/README.md)                                   | Extensions for interacting with apt packages                                   |
 
 ## Acknowledgements
 
@@ -296,5 +298,5 @@ Made possible by:
 CLIs are broad and varied in their form and function, and are prone to change. While there is some advantage to
 wrapping these in strongly defined code as some other build systems attempt to do, the amount of code required to
 properly capture this can quickly get out of hand. `Jig` was built to be flexible and low ceremony, and `Jig.Shell`
-reflects this philosophy by providing first class support for CLI command construction and execution that can be 
+reflects this philosophy by providing first class support for CLI command construction and execution that can be
 copied straight to/from a script or YAML file, while refraining from trying to cater to any specific CLI tool. 
