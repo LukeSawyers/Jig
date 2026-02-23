@@ -2,16 +2,15 @@ using AwesomeAssertions;
 using AwesomeAssertions.Execution;
 using build.NugetLicense;
 using CliWrap;
-using Microsoft.Build.Construction;
+using Jig.Apt;
+using Jig.Lang;
+using Jig.Shell;
+using Jig.Targets;
 using Microsoft.CodeAnalysis.Sarif;
 using Microsoft.CodeAnalysis.Sarif.Readers;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Newtonsoft.Json;
-using Jig.Apt;
-using Jig.Lang;
-using Jig.Shell;
-using Jig.Targets;
 
 namespace build.Targets;
 
@@ -88,11 +87,11 @@ public class StaticAnalysisTargets(DotnetTargets dotnetTargets) : ITargetProvide
         });
 
     public ITarget PackageDescriptionCheck => field ??= new Target(description: "Checks nuget package licenses")
-        .Executes(() =>
+        .Executes(async () =>
             {
-                var projects = BuildConstants.Solution.ProjectsInOrder
-                    .Where(p => p.ProjectType.HasFlag(SolutionProjectType.KnownToBeMSBuildFormat))
-                    .Select(p => p.AbsolutePath)
+                var solution = await BuildConstants.Solution;
+                var projects = solution.SolutionProjects
+                    .Select(p => p.FilePath)
                     .ToArray();
 
                 using var _ = new AssertionScope();

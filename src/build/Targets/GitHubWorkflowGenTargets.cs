@@ -27,6 +27,9 @@ public class GitHubWorkflowGenTargets(
                     branches = ["**"]
                 }
             };
+
+            const string fromRef = "--from-ref HEAD";
+            const string toRef = "--to-ref origin/main";
             
             b.jobs = new()
             {
@@ -37,29 +40,29 @@ public class GitHubWorkflowGenTargets(
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
-                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan")
+                            TargetStepHelper.ScriptStepFromTargets(workflows.Validate, "--plan", fromRef, toRef)
                         ]
                     }
                 },
                 {
-                    "windows-latest", new Job()
+                    "windows-latest", new Job
                     {
                         runs_on = "windows-latest",
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
-                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan")
+                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan", fromRef, toRef)
                         ]
                     }
                 },
                 {
-                    "macos-latest", new Job()
+                    "macos-latest", new Job
                     {
                         runs_on = "macos-latest",
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
-                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan")
+                            TargetStepHelper.ScriptStepFromTargets(workflows.ValidateCode, "--plan", fromRef, toRef)
                         ]
                     }
                 }
