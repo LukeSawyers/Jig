@@ -28,7 +28,7 @@ public class GitHubWorkflowGenTargets(
                 }
             };
 
-            const string fromRef = "--from-ref ${{ github.sha }}";
+            const string fromRef = "--from-ref ${{ github.event.pull_request.head.sha }}";
             const string toRef = "--to-ref origin/${{ github.base_ref }}";
             
             b.jobs = new()
