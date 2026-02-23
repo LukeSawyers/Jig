@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/Extensions/">
+    <Project Path="Jig.Apt/Jig.Apt.csproj" />
+    <Project Path="Jig.DesktopNotifications/Jig.DesktopNotifications.csproj" />
+    <Project Path="Jig.GitHubActions.Tests/Jig.GitHubActions.Tests.csproj" />
+    <Project Path="Jig.GitHubActions/Jig.GitHubActions.csproj" />
+    <Project Path="Jig.Polly/Jig.Polly.csproj" />
+    <Project Path="Jig.Serilog/Jig.Serilog.csproj" />
+    <Project Path="Jig.Shell.Tests/Jig.Shell.Tests.csproj" />
+    <Project Path="Jig.Shell/Jig.Shell.csproj" />
+    <Project Path="Jig.UserInput/Jig.UserInput.csproj" />
+  </Folder>
+  <Folder Name="/SolutionItems/">
+    <File Path="../LICENSE.txt" />
+    <File Path="../README.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+  </Folder>
+  <Project Path="build/build.csproj" />
+  <Project Path="Jig.Tests/Jig.Tests.csproj" />
+  <Project Path="Jig/Jig.csproj" />
+</Solution>
