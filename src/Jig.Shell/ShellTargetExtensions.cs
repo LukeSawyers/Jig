@@ -24,7 +24,8 @@ public static class ShellTargetExtensions
 
             return target.Executes(async (Shell shell, CancellationToken stoppingToken) => await shell
                     .DotnetToolCommand(command, validation, logging)
-                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(), stoppingToken),
+                    .ExecuteAndCaptureJsonOutputAsync<TOutput>(serializerSettings ?? new JsonSerializerSettings(),
+                        stoppingToken),
                 description
             );
         }
@@ -62,11 +63,9 @@ public static class ShellTargetExtensions
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
             ShellLoggingOptions? logging = null
-        ) => target.Executes(
-            command.ToDotnetToolCommand(),
-            validation,
-            logging
-        );
+        ) => target
+            .Executes($"dotnet tool restore")
+            .Executes(command.ToDotnetToolCommand(), validation, logging);
 
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in the platform's native shell
