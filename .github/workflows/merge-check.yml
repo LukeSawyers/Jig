@@ -12,7 +12,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: Validate'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Validate --plan --from-ref HEAD --to-ref origin/main
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Validate --plan --from-ref ${{ github.sha }} --to-ref origin/${{ github.baseref }}
   windows-latest:
     runs-on: windows-latest
     steps:
@@ -20,7 +20,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: ValidateCode'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan --from-ref HEAD --to-ref origin/main
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan --from-ref ${{ github.sha }} --to-ref origin/${{ github.baseref }}
   macos-latest:
     runs-on: macos-latest
     steps:
@@ -28,4 +28,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: 'Execute Targets: ValidateCode'
-      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan --from-ref HEAD --to-ref origin/main
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- ValidateCode --plan --from-ref ${{ github.sha }} --to-ref origin/${{ github.baseref }}

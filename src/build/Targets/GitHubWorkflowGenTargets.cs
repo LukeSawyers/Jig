@@ -28,8 +28,8 @@ public class GitHubWorkflowGenTargets(
                 }
             };
 
-            const string fromRef = "--from-ref HEAD";
-            const string toRef = "--to-ref origin/main";
+            const string fromRef = "--from-ref ${{ github.sha }}";
+            const string toRef = "--to-ref origin/${{ github.base_ref }}";
             
             b.jobs = new()
             {
