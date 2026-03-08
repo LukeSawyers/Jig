@@ -36,9 +36,6 @@ public static class ShellCommandExtensions
         /// <summary>
         ///     Redacts sensitive <see cref="IBuildOption"/> arguments and arguments with :redact formatting
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="UnauthorizedAccessException"></exception>
         public FormattableString Redact()
         {
             const string redactedString = "[REDACTED]";
@@ -61,6 +58,8 @@ public static class ShellCommandExtensions
             return FormattableStringFactory.Create(format, arguments);
         }
 
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public FormattableString ToPrintableCommandString()
         {
             var format = command.Format;
@@ -84,7 +83,6 @@ public static class ShellCommandExtensions
         /// <summary>
         ///     Converts the supplied command, assumed to be a dotnet tool invocation, into the command required to run that tool.
         /// </summary>
-        /// <returns></returns>
         public FormattableString ToDotnetToolCommand()
         {
             var tool = ShellCommand.Parse(command.ToString()).Tool;
@@ -218,7 +216,6 @@ public static class ShellCommandExtensions
         ///     Execute the command returning each standard output line as an async enumerable.
         /// </summary>
         /// <param name="stoppingToken"></param>
-        /// <returns></returns>
         public async IAsyncEnumerable<string> ExecuteAndCaptureOutputAsync(CancellationToken stoppingToken)
         {
             var output = Channel.CreateUnbounded<string>();
@@ -242,7 +239,6 @@ public static class ShellCommandExtensions
         /// </summary>
         /// <param name="settings">Settings to use when deserializing</param>
         /// <param name="stoppingToken"></param>
-        /// <returns></returns>
         public ValueTask<T?> ExecuteAndCaptureJsonOutputAsync<T>(
             JsonSerializerSettings? settings = null,
             CancellationToken stoppingToken = default
@@ -256,7 +252,6 @@ public static class ShellCommandExtensions
         /// </summary>
         /// <param name="options">Options to use when deserializing</param>
         /// <param name="stoppingToken"></param>
-        /// <returns></returns>
         public ValueTask<T?> ExecuteAndCaptureJsonOutputAsync<T>(
             JsonSerializerOptions? options = null,
             CancellationToken stoppingToken = default

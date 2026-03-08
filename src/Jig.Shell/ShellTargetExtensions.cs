@@ -12,7 +12,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified dotnet tool <paramref name="command" /> in exec mode
         /// </summary>
-        /// <returns></returns>
         public ITarget ExecutesDotNetToolWithJsonOutput<TOutput>(
             FormattableString command,
             JsonSerializerSettings? serializerSettings = null,
@@ -37,8 +36,7 @@ public static class ShellTargetExtensions
         ///     Instructs the <paramref name="target" /> to execute the supplied bash-like <paramref name="command" />
         /// </summary>
         /// <exception cref="ArgumentException">If a tool is not specified</exception>
-        /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="UnauthorizedAccessException"></exception>
+
         public T Executes(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -58,7 +56,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified dotnet tool <paramref name="command" /> in exec mode
         /// </summary>
-        /// <returns></returns>
         public T ExecutesDotNetTool(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -70,7 +67,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in the platform's native shell
         /// </summary>
-        /// <returns></returns>
         /// <exception cref="NotSupportedException">If the current platform isn't supported</exception>
         public T ExecutesDefaultShell(
             FormattableString command,
@@ -85,7 +81,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in bash
         /// </summary>
-        /// <returns></returns>
         public T ExecutesBash(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -99,7 +94,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in zsh
         /// </summary>
-        /// <returns></returns>
         public T ExecutesZsh(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -113,7 +107,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in zsh
         /// </summary>
-        /// <returns></returns>
         public T ExecutesDash(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -127,7 +120,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in zsh
         /// </summary>
-        /// <returns></returns>
         public T ExecutesAsh(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
@@ -141,7 +133,6 @@ public static class ShellTargetExtensions
         /// <summary>
         ///     Adds an execution running the specified <paramref name="command" /> in zsh
         /// </summary>
-        /// <returns></returns>
         public T ExecutesPowershell(
             FormattableString command,
             CommandResultValidation validation = CommandResultValidation.ZeroExitCode,
