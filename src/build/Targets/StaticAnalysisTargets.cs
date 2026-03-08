@@ -46,7 +46,7 @@ public class StaticAnalysisTargets(DotnetTargets dotnetTargets) : ITargetProvide
 
     public ITarget CheckLicenses => field ??= new Target(description: "Gets nuget package license validation results")
         .Unlisted()
-        .DependentOn(() => dotnetTargets.Build)
+        .DependentOn(() => dotnetTargets.Restore)
         .ExecutesDotNetToolWithJsonOutput<LicenseValidationResult[]>(
             $"""
              nuget-license -i {BuildConstants.SolutionPath} 
