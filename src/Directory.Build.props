@@ -10,7 +10,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
         <!-- Package Metadata -->
-        <Version>0.3.0</Version>
+        <Version>0.3.1</Version>
         <PackageIcon>logo-128.png</PackageIcon>
         <Authors>Jig Maintainers</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
