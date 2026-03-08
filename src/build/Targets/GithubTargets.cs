@@ -16,7 +16,7 @@ public class GitHubTargets(
         .If(GitHubActionsEnvironment.IsRunningGitHubActions,
             t => t
                 .ExecutesExpression(() => ghOptions.GithubToken.Value.Should().NotBeNull())
-                .Executes(
+                .ExecutesDefaultShell(
                 //language=bash
                 $$"""
                   GH_TOKEN={{ghOptions.GithubToken.Value}}
