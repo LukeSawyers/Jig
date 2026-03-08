@@ -9,6 +9,7 @@ using Jig.UserInput;
 return await new Build("src", defaultBuildConcurrency: BuildConcurrency.Parallel)
     .AddShell()
     .AddSerilog()
+    .AddGitHubActions()
     .If(!GitHubActionsEnvironment.IsRunningGitHubActions,
         b => b
             .AddUserInput()

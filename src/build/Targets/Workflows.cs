@@ -1,11 +1,11 @@
-using System.Diagnostics.Tracing;
 using Jig.Targets;
 
 namespace build.Targets;
 
 public class Workflows(
     DotnetTargets dotnet,
-    StaticAnalysisTargets staticAnalysis
+    StaticAnalysisTargets staticAnalysis,
+    GitHubTargets gitHubTargets
 ) : ITargetProvider
 {
     public ITarget Validate => field ??= new Target(description: "Runs all validation checks")
@@ -13,7 +13,7 @@ public class Workflows(
             () => ValidateCode,
             () => InspectCode
         );
-    
+
     public ITarget ValidateCode => field ??= new Target(description: "Validates code compiles and runs correctly")
         .DependentOn(
             () => dotnet.Build,
@@ -29,6 +29,9 @@ public class Workflows(
             () => staticAnalysis.CountLines
         );
 
-    public ITarget Deploy => field ?? new Target(description: "Runs actions required to publish artifacts")
-        .DependentOn(() => dotnet.NugetPush);
+    public ITarget Publish => field ?? new Target(description: "Runs actions required to publish artifacts")
+        .DependentOn(
+            () => dotnet.NugetPush,
+            () => gitHubTargets.GhCreateRelease
+        );
 }

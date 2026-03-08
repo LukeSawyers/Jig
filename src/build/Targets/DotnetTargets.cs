@@ -24,6 +24,7 @@ public class DotnetTargets : ITargetProvider
         new(null, sensitive: true, description: "API key used to push nuget packages");
 
     private string FromRefArgument => FromRef.Value?.Let(r => $"--from {r}") ?? "";
+    
     private string ToRefArgument => ToRef.Value?.Let(r => $"--to {r}") ?? "";
 
     // Build & Test
@@ -71,7 +72,6 @@ public class DotnetTargets : ITargetProvider
 
     private FormattableString MonoRepoCommand(string command) =>
         $"dotnet-monorepo@0.0.3 {command} {FromRefArgument} {ToRefArgument} --verbosity {Verbosity} --configuration Release";
-
     
     public ResiliencePipelineBuilder ApplyRetry(ResiliencePipelineBuilder b)
         => Retry

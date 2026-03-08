@@ -8,7 +8,7 @@ namespace Jig.GitHubActions;
 /// <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/variables">documentation</a>.
 /// </summary>
 [PublicAPI]
-public class GitHubActionsEnvironment
+public static class GitHubActionsEnvironment
 {
     /// <summary>
     ///     The name of the action currently running, or the id of a step.
@@ -124,7 +124,8 @@ public class GitHubActionsEnvironment
     /// <summary>
     ///     true if branch protections or rulesets are configured for the ref that triggered the workflow run.
     /// </summary>
-    public static bool RefProtected => Environment.GetEnvironmentVariable("GITHUB_REF_PROTECTED")?.ToLowerInvariant() == "true";
+    public static bool RefProtected =>
+        Environment.GetEnvironmentVariable("GITHUB_REF_PROTECTED")?.ToLowerInvariant() == "true";
 
     /// <summary>
     ///     The type of ref that triggered the workflow run.

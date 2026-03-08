@@ -7,13 +7,14 @@ namespace build.Targets;
 
 public class GitHubWorkflowGenTargets(
     DotnetTargets dotnet,
+    GithubOptions ghOptions,
     Workflows workflows
 ) : ITargetProvider
 {
     public ITarget GenerateGitHubWorkflows => field ??= new Target(description: "Generates all github workflows")
         .DependentOn(
             () => MergeCheck,
-            () => Deploy
+            () => Publish
         );
     
     public ITarget MergeCheck => field ??= new Target(description: "Generates a github workflow for use with github pull requests")
@@ -69,7 +70,7 @@ public class GitHubWorkflowGenTargets(
             };
         });
     
-    public ITarget Deploy => field ??= new Target(description: "Generates a github workflow for nuget package deployment")
+    public ITarget Publish => field ??= new Target(description: "Generates a github workflow for publish actions")
         .GeneratesGitHubActionsWorkflow(b =>
         {
             const string fromRef = "--from-ref HEAD~1";
@@ -80,7 +81,7 @@ public class GitHubWorkflowGenTargets(
                 workflow_dispatch = new(),
                 push = new()
                 {
-                    branches = ["main"]
+                    tags = ["*"],
                 }
             };
             
@@ -90,15 +91,17 @@ public class GitHubWorkflowGenTargets(
                     "ubuntu-latest", new Job
                     {
                         runs_on = "ubuntu-latest",
+                        
                         steps = 
                         [
                             CommonStepHelper.AddCheckoutStep(fetchDepth: "0"), 
                             TargetStepHelper.ScriptStepFromTargets(
-                                workflows.Deploy, 
+                                workflows.Publish, 
                                 "--plan",
                                 fromRef,
                                 toRef,
-                                TargetStepHelper.ArgFromSecrets(dotnet.NugetApiKey)
+                                TargetStepHelper.ArgFromSecrets(dotnet.NugetApiKey),
+                                TargetStepHelper.ArgFromSecrets(ghOptions.GithubToken)
                             ),
                         ]
                     }

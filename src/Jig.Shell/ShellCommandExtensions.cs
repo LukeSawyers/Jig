@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading.Channels;
 using CliWrap;
@@ -142,7 +144,9 @@ public static class ShellCommandExtensions
             );
         }
 
-        /// <exception cref="NotSupportedException"></exception>
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
         public FormattableString ToNativeShellCommand()
         {
             if (OperatingSystem.IsWindows())
@@ -187,7 +191,7 @@ public static class ShellCommandExtensions
             {
                 return command.ToBashCommand();
             }
-
+            
             throw new NotSupportedException($"{Environment.OSVersion.Platform} not supported");
         }
     }
