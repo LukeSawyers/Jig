@@ -18,6 +18,12 @@ public class ResultsLoggerExtension(
     public async ValueTask OnBuildCompleted()
     {
         logger.LogDebug("");
+        if (!buildContext.TargetResults.Any())
+        {
+            logger.LogWarning("No Build Results!");
+            return;
+        }
+
         logger.LogDebug("Build Results:");
 
         var template = "{TargetName} {ResultType} {ExecutionTime:F1}s";

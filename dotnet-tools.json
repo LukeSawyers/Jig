@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "dotnet-monorepo": {
+      "version": "0.0.2",
+      "commands": [
+        "monorepo"
+      ],
+      "rollForward": false
+    }
+  }
+}
