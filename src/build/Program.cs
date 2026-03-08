@@ -11,6 +11,7 @@ return await new Build("src", defaultBuildConcurrency: BuildConcurrency.Parallel
     .AddSerilog()
     .If(!GitHubActionsEnvironment.IsRunningGitHubActions,
         b => b
+            .AddBuildOptions<GithubOptions>()
             .AddUserInput()
             .AddNotifications()
     )

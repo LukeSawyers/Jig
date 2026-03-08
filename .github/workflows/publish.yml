@@ -1,0 +1,17 @@
+name: publish
+on:
+  push:
+    tags:
+    - '*'
+  workflow_dispatch:
+jobs:
+  ubuntu-latest:
+    runs-on: ubuntu-latest
+    permissions: 
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: 'Execute Targets: Publish'
+      run: dotnet run --verbosity q --project ./src/build/build.csproj -- Publish --plan --nuget-api-key ${{ secrets.NUGET_API_KEY }} --github-token ${{ secrets.GITHUB_TOKEN }}
