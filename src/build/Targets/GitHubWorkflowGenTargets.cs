@@ -72,7 +72,7 @@ public class GitHubWorkflowGenTargets(
     public ITarget Deploy => field ??= new Target(description: "Generates a github workflow for nuget package deployment")
         .GeneratesGitHubActionsWorkflow(b =>
         {
-            const string fromRef = "--from-ref HEAD-1";
+            const string fromRef = "--from-ref HEAD~1";
             const string toRef = "--to-ref HEAD";
             
             b.on = new()

@@ -13,6 +13,7 @@ namespace build.Targets;
 public class DotnetTargets : ITargetProvider
 {
     public BuildOption<string?> FromRef { get; } = new(null, description: "The source ref to use for monorepo diffing");
+
     public BuildOption<string?> ToRef { get; } = new(null, description: "The target ref to use for monorepo diffing");
 
     public BuildOption<string> Verbosity { get; } = new("minimal", description: "Verbosity for dotnet tasks");
@@ -22,8 +23,8 @@ public class DotnetTargets : ITargetProvider
     public BuildOption<string?> NugetApiKey { get; } =
         new(null, sensitive: true, description: "API key used to push nuget packages");
 
-    private string? FromRefArgument => FromRef.Value?.Let(r => $"--from {r}");
-    private string? ToRefArgument => ToRef.Value?.Let(r => $"--to {r}");
+    private string FromRefArgument => FromRef.Value?.Let(r => $"--from {r}") ?? "";
+    private string ToRefArgument => ToRef.Value?.Let(r => $"--to {r}") ?? "";
 
     // Build & Test
     public ITarget Restore => field ??= new Target(description: "Restores the solution")
@@ -32,8 +33,7 @@ public class DotnetTargets : ITargetProvider
 
     public ITarget Build => field ??= new Target(description: "Builds the solution")
         .After(() => Restore)
-        .ExecutesDotNetTool(
-            $"dotnet-monorepo build {FromRefArgument} {ToRefArgument} --verbosity {Verbosity} --configuration Release")
+        .ExecutesDotNetTool(MonoRepoCommand("build"))
         .WithResilience(ApplyRetry);
 
     public ITarget Test => field ??= new Target(description: "Tests the solution")
@@ -41,9 +41,7 @@ public class DotnetTargets : ITargetProvider
             () => Restore,
             () => Build
         )
-        .ExecutesDotNetTool(
-            $"dotnet-monorepo test {FromRefArgument} {ToRefArgument} --verbosity {Verbosity} --configuration Release"
-        )
+        .ExecutesDotNetTool(MonoRepoCommand("test"))
         .WithResilience(ApplyRetry);
 
     // Packaging
@@ -56,8 +54,7 @@ public class DotnetTargets : ITargetProvider
     public ITarget Pack => field ??= new Target(description: "Generates nuget packages")
         .DependentOn(() => ClearNugetPackages)
         .After(() => Test)
-        .ExecutesDotNetTool(
-            $"dotnet-monorepo pack {FromRefArgument} {ToRefArgument} --verbosity {Verbosity} --configuration Release")
+        .ExecutesDotNetTool(MonoRepoCommand("pack"))
         .WithResilience(ApplyRetry);
 
     public ITarget NugetPush => field ??= new Target(description: "Pushes nuget packages to nuget.org")
@@ -72,6 +69,10 @@ public class DotnetTargets : ITargetProvider
              """
         ).WithResilience(ApplyRetry);
 
+    private FormattableString MonoRepoCommand(string command) =>
+        $"dotnet-monorepo@0.0.3 {command} {FromRefArgument} {ToRefArgument} --verbosity {Verbosity} --configuration Release";
+
+    
     public ResiliencePipelineBuilder ApplyRetry(ResiliencePipelineBuilder b)
         => Retry
             ? b.AddRetry(new RetryStrategyOptions
@@ -79,4 +80,4 @@ public class DotnetTargets : ITargetProvider
                 MaxRetryAttempts = int.MaxValue,
             })
             : b;
-}
+} 

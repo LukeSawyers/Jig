@@ -60,25 +60,7 @@ public static class ShellCommandExtensions
 
         /// <exception cref="NotSupportedException"></exception>
         /// <exception cref="UnauthorizedAccessException"></exception>
-        public FormattableString ToPrintableCommandString()
-        {
-            var format = command.Format;
-
-            var shellCommand = ShellCommand.Parse(command.ToString());
-
-            format = format.Replace(shellCommand.Tool, "{Tool}");
-            format += " @ {CurrentDirectory}";
-
-            var arguments = new[]
-                {
-                    shellCommand.Tool
-                }
-                .Concat(command.GetArguments())
-                .Append(Directory.GetCurrentDirectory())
-                .ToArray();
-
-            return FormattableStringFactory.Create(format, arguments);
-        }
+        public FormattableString ToPrintableCommandString() => command.Concat($" @ {Directory.GetCurrentDirectory()}");
 
         /// <summary>
         ///     Converts the supplied command, assumed to be a dotnet tool invocation, into the command required to run that tool.
